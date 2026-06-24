@@ -21,10 +21,11 @@ export type ParsedMarkdown = {
 };
 
 export function readDocMarkdown(sourcePath: string) {
-  const root = path.resolve(process.cwd());
-  const absolutePath = path.resolve(root, sourcePath);
+  const docsRoot = path.resolve(process.cwd(), "docs");
+  const relativeDocPath = sourcePath.replace(/^docs[\\/]/, "");
+  const absolutePath = path.resolve(docsRoot, relativeDocPath);
 
-  if (!absolutePath.startsWith(root)) {
+  if (!absolutePath.startsWith(docsRoot)) {
     throw new Error(`Doc path escapes workspace: ${sourcePath}`);
   }
 
