@@ -61,6 +61,7 @@ const rawDocChapters = [
   ["tui-changelog", "TUI Changelog", "Observability", "Terminal", "docs/TUI_CHANGELOG.md"],
   ["tui-local-inference", "TUI CLI Local Inference Guide", "Providers", "Local", "docs/TUI_LOCAL_INFERENCE.md"],
   ["xiaomi-mimo-integration", "Xiaomi MiMo Integration", "Providers", "Cloud", "docs/XIAOMI_MIMO_INTEGRATION.md"],
+  ["provider-directory", "Provider Directory", "Providers", "Index", "docs/providers/README.md"],
   ["provider-anthropic", "Anthropic Provider", "Providers", "Cloud", "docs/providers/ANTHROPIC.md"],
   ["provider-cerebras", "Cerebras Provider", "Providers", "Cloud", "docs/providers/CEREBRAS.md"],
   ["provider-cohere", "Cohere Provider", "Providers", "Cloud", "docs/providers/COHERE.md"],

@@ -197,6 +197,7 @@ function InlineTokens({ tokens, chapterSourcePath }: { tokens: InlineToken[]; ch
     <>
       {tokens.map((token, index) => {
         if (token.type === "code") return <code key={index}>{token.value}</code>;
+        if (token.type === "strong") return <strong key={index}>{token.value}</strong>;
         if (token.type === "link") {
           return (
             <Link href={resolveMarkdownHref(token.href, chapterSourcePath)} key={index}>

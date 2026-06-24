@@ -4,6 +4,7 @@ import path from "node:path";
 export type InlineToken =
   | { type: "text"; value: string }
   | { type: "code"; value: string }
+  | { type: "strong"; value: string }
   | { type: "link"; value: string; href: string };
 
 export type MarkdownBlock =
@@ -168,17 +169,36 @@ function isTableStart(lines: string[], index: number) {
 }
 
 function splitTableRow(line: string) {
-  return line
-    .trim()
-    .replace(/^\|/, "")
-    .replace(/\|$/, "")
-    .split("|")
-    .map((cell) => cell.trim());
+  const cells: string[] = [];
+  const value = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+  let cell = "";
+
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index];
+    const next = value[index + 1];
+
+    if (char === "\\" && next === "|") {
+      cell += "|";
+      index += 1;
+      continue;
+    }
+
+    if (char === "|") {
+      cells.push(cell.trim());
+      cell = "";
+      continue;
+    }
+
+    cell += char;
+  }
+
+  cells.push(cell.trim());
+  return cells;
 }
 
 function parseInline(value: string): InlineToken[] {
   const tokens: InlineToken[] = [];
-  const pattern = /(`[^`]+`)|\[([^\]]+)\]\(([^)]+)\)/g;
+  const pattern = /(`[^`]+`)|\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*/g;
   let cursor = 0;
   let match: RegExpExecArray | null;
 
@@ -189,6 +209,8 @@ function parseInline(value: string): InlineToken[] {
 
     if (match[1]) {
       tokens.push({ type: "code", value: match[1].slice(1, -1) });
+    } else if (match[4]) {
+      tokens.push({ type: "strong", value: match[4] });
     } else {
       tokens.push({ type: "link", value: match[2], href: match[3] });
     }
