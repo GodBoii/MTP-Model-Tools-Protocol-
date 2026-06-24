@@ -50,12 +50,12 @@ export function parseMarkdown(markdown: string): ParsedMarkdown {
       continue;
     }
 
-    const fence = line.match(/^```([\w-]*)\s*$/);
+    const fence = line.match(/^\s*```([\w-]*)\s*$/);
     if (fence) {
       const language = fence[1] || "text";
       const codeLines: string[] = [];
       index += 1;
-      while (index < lines.length && !lines[index].startsWith("```")) {
+      while (index < lines.length && !/^\s*```/.test(lines[index])) {
         codeLines.push(lines[index]);
         index += 1;
       }
@@ -149,7 +149,7 @@ function shouldContinueParagraph(lines: string[], index: number) {
   const line = lines[index];
   const next = lines[index + 1];
   if (!line.trim()) return false;
-  if (/^```/.test(line)) return false;
+  if (/^\s*```/.test(line)) return false;
   if (/^#{1,4}\s+/.test(line)) return false;
   if (/^(\s*)([-*]|\d+[.)])\s+/.test(line)) return false;
   if (/^>\s?/.test(line)) return false;

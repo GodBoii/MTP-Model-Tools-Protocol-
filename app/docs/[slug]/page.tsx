@@ -9,8 +9,9 @@ export function generateStaticParams() {
   return docChapters.map((chapter) => ({ slug: chapter.slug }));
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }) {
-  const chapter = getDocChapter(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const chapter = getDocChapter(slug);
 
   return {
     title: `${chapter.title} | MTPX Docs`,
@@ -18,9 +19,10 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
   };
 }
 
-export default function DocDetailPage({ params }: { params: { slug: string } }) {
-  const chapter = getDocChapter(params.slug);
-  const next = getNextDocChapter(params.slug);
+export default async function DocDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const chapter = getDocChapter(slug);
+  const next = getNextDocChapter(slug);
   const markdown = readDocMarkdown(chapter.sourcePath);
   const parsed = parseMarkdown(markdown);
 
