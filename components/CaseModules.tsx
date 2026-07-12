@@ -39,8 +39,8 @@ export function CaseModules({ project, nextProject }: { project: Project & { out
         ))}
       </section>
       <section className="case-cta">
-        <span>Contact</span>
-        <Link href="/contact">Let&apos;s collaborate <ArrowUpRight /></Link>
+        <span>Documentation</span>
+        <Link href="/docs">Explore the system <ArrowUpRight /></Link>
       </section>
       <section className="next-project">
         <span>Next Project</span>

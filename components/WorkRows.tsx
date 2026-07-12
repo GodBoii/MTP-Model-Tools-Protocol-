@@ -7,11 +7,22 @@ import { Visual } from "@/components/Visual";
 
 export function WorkRows({ projects, compact = false }: { projects: Project[]; compact?: boolean }) {
   const preview = useRef<HTMLDivElement>(null);
+  const pointer = useRef({ x: 0, y: 0, currentX: 0, currentY: 0, raf: 0 });
   const [active, setActive] = useState<Project | null>(null);
 
   function move(event: React.MouseEvent) {
-    if (!preview.current) return;
-    preview.current.style.transform = `translate3d(${event.clientX + 28}px, ${event.clientY - 170}px, 0)`;
+    pointer.current.x = event.clientX + 28;
+    pointer.current.y = event.clientY - 170;
+    if (pointer.current.raf) return;
+    const follow = () => {
+      const state = pointer.current;
+      state.currentX += (state.x - state.currentX) * 0.16;
+      state.currentY += (state.y - state.currentY) * 0.16;
+      if (preview.current) preview.current.style.transform = `translate3d(${state.currentX}px, ${state.currentY}px, 0)`;
+      if (Math.abs(state.x - state.currentX) + Math.abs(state.y - state.currentY) > 0.4) state.raf = requestAnimationFrame(follow);
+      else state.raf = 0;
+    };
+    pointer.current.raf = requestAnimationFrame(follow);
   }
 
   return (
