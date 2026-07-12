@@ -10,10 +10,7 @@ export default function Home() {
     <main className="page-shell">
       <section className="home-hero">
         <h1 className="mtp-wordmark" aria-label="mtpx">
-          <span className="mtp-letter mtp-letter--m">m</span>
-          <span className="mtp-letter mtp-letter--t">t</span>
-          <span className="mtp-letter mtp-letter--p">p</span>
-          <span className="mtp-letter mtp-letter--x">x</span>
+          <span className="mtp-letter">m</span><span className="mtp-letter">t</span><span className="mtp-letter">p</span><span className="mtp-letter mtp-letter--x">x</span>
         </h1>
         <div className="home-hero__media">
           <Visual title="multi tool protocol" colors={["#1a1a1a", "#ff3928", "#ebebeb"]} />
