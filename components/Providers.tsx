@@ -4,6 +4,7 @@ import Lenis from "@studio-freight/lenis";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export function Providers({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -19,22 +20,20 @@ export function Providers({ children }: { children: ReactNode }) {
       return;
     }
 
+    gsap.registerPlugin(ScrollTrigger);
     const lenis = new Lenis({
-      duration: 1.15,
+      duration: 1.28,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
-      wheelMultiplier: 0.72,
+      wheelMultiplier: 0.78,
       touchMultiplier: 1.25
     });
-
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-
-    const id = requestAnimationFrame(raf);
+    lenis.on("scroll", ScrollTrigger.update);
+    const tick = (time: number) => lenis.raf(time * 1000);
+    gsap.ticker.add(tick);
+    gsap.ticker.lagSmoothing(0);
     return () => {
-      cancelAnimationFrame(id);
+      gsap.ticker.remove(tick);
       lenis.destroy();
     };
   }, []);
@@ -116,30 +115,69 @@ export function Providers({ children }: { children: ReactNode }) {
           { clipPath: "inset(0% 0% 0% 0%)", scale: 1, duration: 1.25, ease: "expo.out", stagger: 0.08, delay: 0.18 }
         );
       }
+
+      const sections = gsap.utils.toArray<HTMLElement>(".page-shell > section:not(:first-child)");
+      sections.forEach((section) => {
+        gsap.fromTo(section,
+          { y: 72, autoAlpha: 0.45 },
+          {
+            y: 0,
+            autoAlpha: 1,
+            duration: 1.15,
+            ease: "expo.out",
+            scrollTrigger: { trigger: section, start: "top 91%", once: true }
+          }
+        );
+      });
+
+      gsap.utils.toArray<HTMLElement>(".visual").forEach((visual) => {
+        const canvas = visual.querySelector(".visual__canvas");
+        if (!canvas) return;
+        gsap.fromTo(canvas,
+          { scale: 1.075 },
+          { scale: 1, ease: "none", scrollTrigger: { trigger: visual, start: "top bottom", end: "bottom top", scrub: 0.8 } }
+        );
+      });
+
+      gsap.utils.toArray<HTMLElement>(".case-module--two .visual, .doc-hero .visual").forEach((visual, index) => {
+        gsap.fromTo(visual,
+          { yPercent: index % 2 ? 7 : -3 },
+          { yPercent: index % 2 ? -4 : 3, ease: "none", scrollTrigger: { trigger: visual, start: "top bottom", end: "bottom top", scrub: 1 } }
+        );
+      });
     });
-    return () => ctx.revert();
+    const refresh = window.setTimeout(() => ScrollTrigger.refresh(), 120);
+    return () => { window.clearTimeout(refresh); ctx.revert(); };
   }, [pathname]);
 
   useEffect(() => {
+    let cancelled = false;
     const count = { value: 0 };
-    gsap.to(count, {
-      value: 100,
-      duration: 1.15,
-      ease: "expo.out",
+    const tween = gsap.to(count, {
+      value: 92, duration: 0.9, ease: "power3.out",
       onUpdate: () => {
         const el = document.querySelector("[data-loader-count]");
-        if (el) el.textContent = String(Math.round(count.value));
-      },
-      onComplete: () => {
-        gsap.to(".loader", {
-          autoAlpha: 0,
-          yPercent: -8,
-          duration: 0.55,
-          ease: "expo.inOut",
-          onComplete: () => setLoading(false)
-        });
+        if (el) el.textContent = String(Math.round(count.value)).padStart(2, "0");
       }
     });
+    Promise.all([
+      Promise.race([document.fonts.ready, new Promise((resolve) => window.setTimeout(resolve, 1400))]),
+      new Promise((resolve) => window.setTimeout(resolve, 520))
+    ]).then(() => {
+      if (cancelled) return;
+      gsap.to(count, {
+        value: 100, duration: 0.28, ease: "power2.out",
+        onUpdate: () => {
+          const el = document.querySelector("[data-loader-count]");
+          if (el) el.textContent = String(Math.round(count.value));
+        },
+        onComplete: () => gsap.to(".loader", {
+          autoAlpha: 0, yPercent: -100, duration: 0.78, ease: "expo.inOut",
+          onComplete: () => setLoading(false)
+        })
+      });
+    });
+    return () => { cancelled = true; tween.kill(); };
   }, []);
 
   return (
@@ -168,8 +206,8 @@ function GrainCanvas() {
     let frame = 0;
     let raf = 0;
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.width = 180;
+      canvas.height = Math.max(100, Math.round(180 * window.innerHeight / window.innerWidth));
     };
     const draw = () => {
       frame += 1;
