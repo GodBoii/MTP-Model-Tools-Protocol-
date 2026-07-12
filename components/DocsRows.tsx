@@ -7,11 +7,14 @@ import { Visual } from "@/components/Visual";
 
 export function DocsRows({ chapters, compact = false }: { chapters: DocChapter[]; compact?: boolean }) {
   const preview = useRef<HTMLDivElement>(null);
+  const current = useRef({ x: 0, y: 0 });
   const [active, setActive] = useState<DocChapter | null>(null);
 
   function move(event: React.MouseEvent) {
     if (!preview.current) return;
-    preview.current.style.transform = `translate3d(${event.clientX + 28}px, ${event.clientY - 170}px, 0)`;
+    current.current.x += (event.clientX + 28 - current.current.x) * 0.28;
+    current.current.y += (event.clientY - 170 - current.current.y) * 0.28;
+    preview.current.style.transform = `translate3d(${current.current.x}px, ${current.current.y}px, 0)`;
   }
 
   return (

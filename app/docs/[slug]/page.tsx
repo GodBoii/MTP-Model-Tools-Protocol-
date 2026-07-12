@@ -30,61 +30,60 @@ export default async function DocDetailPage({ params }: { params: Promise<{ slug
     <main className="page-shell doc-detail">
       <section className="case-hero doc-hero">
         <TextReveal text={parsed.title} as="h1" />
-        <div className="case-hero__info">
-          <Meta label="Section" value={chapter.group} />
-          <Meta label="Track" value={chapter.track} />
-          <Meta label="Order" value={`No.${chapter.order}`} />
-          <Link href="/docs">All docs <ArrowUpRight size={18} /></Link>
-        </div>
         <p>{chapter.summary}</p>
         <Visual title={chapter.title} colors={chapter.palette} />
       </section>
 
-      <section className="case-overview doc-overview">
-        <h2>use case</h2>
-        <p>{chapter.useCase}</p>
-        <ul>{chapter.bullets.map((item) => <li key={item}>{item}</li>)}</ul>
+      <section className="doc-chapter-bar" aria-label="Chapter information">
+        <span>Chapter {chapter.order}</span>
+        <span>{chapter.group}</span>
+        <span>{chapter.track}</span>
+        <Link href="/docs">Index <ArrowUpRight size={16} /></Link>
       </section>
 
-      <section className="doc-explain">
-        <div>
-          <span>01 / explanation</span>
-          <h2>What this page is responsible for</h2>
+      <section className="doc-primer">
+        <div className="doc-primer__label"><span>01</span><strong>Orientation</strong></div>
+        <div className="doc-primer__copy">
+          <p>{chapter.explanation}</p>
+          <h2>Use this when</h2>
+          <p>{chapter.useCase}</p>
+          <ul>{chapter.bullets.map((item) => <li key={item}>{item}</li>)}</ul>
         </div>
-        <p>{chapter.explanation}</p>
-      </section>
-
-      <section className="doc-code-block">
-        <div>
-          <span>02 / implementation</span>
-          <h2>{parsed.hasCode ? "Syntax starter" : "Minimal pattern"}</h2>
+        <div className="doc-primer__code">
+          <span>02 / {parsed.hasCode ? "syntax starter" : "minimal pattern"}</span>
+          <pre><code>{chapter.code}</code></pre>
         </div>
-        <pre>
-          <code>{chapter.code}</code>
-        </pre>
       </section>
 
       <section className="doc-manual-section" aria-labelledby="full-documentation">
         <div className="doc-manual-section__intro">
-          <span>03 / documentation</span>
-          <h2 id="full-documentation">Full documentation</h2>
-          <p>
-            This section renders the selected source manual with its syntax,
-            code snippets, tables, linked references, and implementation notes.
-          </p>
+          <span>03 / manual</span>
+          <h2 id="full-documentation">Read the system</h2>
+          <p>The complete source manual—syntax, examples, linked references, edge cases, and implementation notes.</p>
+          <Link href="/docs">Documentation index ↗</Link>
         </div>
-        <article className="doc-markdown">
-          {parsed.blocks.map((block, index) => (
-            <MarkdownBlockView
-              block={block}
-              chapterSourcePath={chapter.sourcePath}
-              key={`${block.type}-${index}`}
-            />
+        <article className="doc-manual">
+          {groupManualBlocks(parsed.blocks).map((blocks, sectionIndex) => (
+            <section className="doc-content-section" key={sectionIndex}>
+              <div className="doc-content-section__label">
+                <span>{String(sectionIndex + 1).padStart(2, "0")}</span>
+                <span>{sectionLabel(blocks)}</span>
+              </div>
+              <div className="doc-markdown">
+                {blocks.map((block, blockIndex) => (
+                  <MarkdownBlockView
+                    block={block}
+                    chapterSourcePath={chapter.sourcePath}
+                    key={`${block.type}-${blockIndex}`}
+                  />
+                ))}
+              </div>
+            </section>
           ))}
         </article>
       </section>
 
-      <section className="case-process doc-process">
+      <section className="case-process doc-process" aria-label="Implementation sequence">
         {["Read", "Wire", "Observe", "Harden"].map((step, index) => (
           <div key={step}>
             <span>{String(index + 1).padStart(2, "0")}</span>
@@ -102,20 +101,43 @@ export default async function DocDetailPage({ params }: { params: Promise<{ slug
   );
 }
 
-function Meta({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
 function processCopy(step: string, title: string) {
   if (step === "Read") return `Understand where ${title} sits in the agent loop before adding abstractions.`;
   if (step === "Wire") return "Connect the smallest useful provider, registry, store, or event stream first.";
   if (step === "Observe") return "Expose events, logs, results, and failure states while the runtime is still moving.";
   return "Add policy, tests, retries, and audit traces after the behavior is visible.";
+}
+
+function groupManualBlocks(blocks: MarkdownBlock[]) {
+  const groups: MarkdownBlock[][] = [];
+  let current: MarkdownBlock[] = [];
+
+  blocks.forEach((block) => {
+    const startsSection = block.type === "heading" && block.level === 2;
+    const currentHasSection = current.some((item) => item.type === "heading" && item.level === 2);
+    if (startsSection && currentHasSection) {
+      groups.push(current);
+      current = [];
+    }
+    current.push(block);
+  });
+  if (current.length) groups.push(current);
+
+  return groups.reduce<MarkdownBlock[][]>((merged, group) => {
+    const previous = merged[merged.length - 1];
+    if (previous && previous.length === 1 && previous[0].type === "heading") {
+      previous.push(...group);
+      return merged;
+    }
+    merged.push(group);
+    return merged;
+  }, []);
+}
+
+function sectionLabel(blocks: MarkdownBlock[]) {
+  const heading = blocks.find((block) => block.type === "heading");
+  if (!heading || heading.type !== "heading") return "overview";
+  return heading.tokens.map((token) => token.value).join("").slice(0, 28);
 }
 
 function MarkdownBlockView({ block, chapterSourcePath }: { block: MarkdownBlock; chapterSourcePath: string }) {
