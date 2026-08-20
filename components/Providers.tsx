@@ -59,17 +59,19 @@ export function Providers({ children }: { children: ReactNode }) {
       transitionInFlight.current = true;
 
       const curtain = transitionRef.current;
-      gsap.killTweensOf([".page-shell", curtain]);
-      gsap.set(curtain, { yPercent: 0, scaleY: 0, transformOrigin: "50% 50%" });
+      const shell = document.querySelector(".page-shell");
+      gsap.killTweensOf([shell, curtain].filter(Boolean));
+      if (curtain) gsap.set(curtain, { yPercent: 0, scaleY: 0, transformOrigin: "50% 50%" });
 
-      gsap.timeline({
+      const timeline = gsap.timeline({
         defaults: { ease: "expo.inOut" },
         onComplete: () => {
           router.push(`${url.pathname}${url.search}${url.hash}`);
         }
-      })
-        .to(".page-shell", { autoAlpha: 0, y: -46, scale: 0.965, duration: 0.58 }, 0)
-        .to(curtain, { scaleY: 1, duration: 0.78 }, 0.08);
+      });
+      if (shell) timeline.to(shell, { autoAlpha: 0, y: -46, scale: 0.965, duration: 0.58 }, 0);
+      if (curtain) timeline.to(curtain, { scaleY: 1, duration: 0.78 }, 0.08);
+      if (!shell && !curtain) timeline.to({}, { duration: 0.2 });
     };
 
     document.addEventListener("click", onClick, true);
@@ -94,11 +96,14 @@ export function Providers({ children }: { children: ReactNode }) {
         });
       }
 
-      gsap.fromTo(
-        ".page-shell",
-        { autoAlpha: 0, y: 42, clipPath: "inset(7% 0 0 0)" },
-        { autoAlpha: 1, y: 0, scale: 1, clipPath: "inset(0% 0 0 0)", duration: 1.05, ease: "expo.out", delay: transitionInFlight.current ? 0.16 : 0 }
-      );
+      const shell = document.querySelector(".page-shell");
+      if (shell) {
+        gsap.fromTo(
+          shell,
+          { autoAlpha: 0, y: 42, clipPath: "inset(7% 0 0 0)" },
+          { autoAlpha: 1, y: 0, scale: 1, clipPath: "inset(0% 0 0 0)", duration: 1.05, ease: "expo.out", delay: transitionInFlight.current ? 0.16 : 0 }
+        );
+      }
       const revealLines = gsap.utils.toArray(".reveal-line");
       if (revealLines.length) {
         gsap.fromTo(
@@ -171,10 +176,17 @@ export function Providers({ children }: { children: ReactNode }) {
           const el = document.querySelector("[data-loader-count]");
           if (el) el.textContent = String(Math.round(count.value));
         },
-        onComplete: () => gsap.to(".loader", {
-          autoAlpha: 0, yPercent: -100, duration: 0.78, ease: "expo.inOut",
-          onComplete: () => setLoading(false)
-        })
+        onComplete: () => {
+          const loader = document.querySelector(".loader");
+          if (!loader) {
+            setLoading(false);
+            return;
+          }
+          gsap.to(loader, {
+            autoAlpha: 0, yPercent: -100, duration: 0.78, ease: "expo.inOut",
+            onComplete: () => setLoading(false)
+          });
+        }
       });
     });
     return () => { cancelled = true; tween.kill(); };
