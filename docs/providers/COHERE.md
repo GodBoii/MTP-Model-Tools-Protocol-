@@ -1,142 +1,76 @@
-# Cohere Provider
+# Cohere provider
 
-Cohere provides Command models with native RAG grounding and multi-step agentic tool use built into the model.
+`Cohere` is the public alias for `CohereToolCallingProvider`. This guide derives its constructor from MTPX 0.1.37.
 
-## Install
-
-```bash
-pip install "mtpx[cohere]"
-```
-
-Or install the SDK directly:
+## Install and configure
 
 ```bash
-pip install cohere
+python -m pip install "mtpx[cohere]"
+mtp doctor --provider cohere
 ```
 
-## API Key Setup
+Set `COHERE_API_KEY` in your process environment before constructing the provider. The SDK does not automatically load `.env`. To use a `.env` file, install `mtpx[dotenv]` and call `Agent.load_dotenv_if_available()` first.
 
-### Option 1: `.env` file (recommended)
+Constructor model defaults below come from this release's code. They are offline defaults, not a guarantee of current provider availability or account access. Enter an available model ID, or use `/model` in the terminal UI to discover models.
 
-1. Install dotenv support:
-   ```bash
-   pip install python-dotenv
-   ```
-   Or with the MTP extra:
-   ```bash
-   pip install "mtpx[dotenv]"
-   ```
-
-2. Create a `.env` file in your project root:
-   ```
-   COHERE_API_KEY=your_key_here
-   ```
-
-3. Load it in your code **before** creating the provider:
-   ```python
-   from mtp import Agent
-
-   Agent.load_dotenv_if_available()  # reads .env file
-   ```
-
-Get a free trial key at [dashboard.cohere.com](https://dashboard.cohere.com) (no credit card required).
-
-### Option 2: System environment variable
-
-```bash
-# Linux/macOS
-export COHERE_API_KEY="..."
-
-# Windows PowerShell
-$env:COHERE_API_KEY="..."
-```
-
-## Quick Start
+## Create an agent
 
 ```python
 from mtp import Agent
 from mtp.providers import Cohere
+from mtp.toolkits import CalculatorToolkit
 
-Agent.load_dotenv_if_available()  # loads COHERE_API_KEY from .env
-
-provider = Cohere(model="command-a-03-2025")
 tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-reply = agent.run_loop("What is 25 * 4 + 10?")
-print(reply)
+tools.register_toolkit_loader("calculator", CalculatorToolkit())
+provider = Cohere()
+agent = Agent.MTPAgent(provider=provider, tools=tools)
+print(agent.run("What is 25 * 4 + 10?", max_rounds=4))
 ```
 
-## Parameters
+This example makes a provider request. The [offline quickstart](../website/QUICKSTART.md) needs no credentials.
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `model` | `str` | `"command-a-03-2025"` | Cohere model ID |
-| `api_key` | `str \| None` | `None` | API key (falls back to `COHERE_API_KEY` env var) |
-| `temperature` | `float` | `0.3` | Sampling temperature |
-| `max_tokens` | `int` | `4096` | Maximum response tokens |
-| `preamble` | `str \| None` | `None` | System prompt (Cohere's term for system instructions) |
-| `force_single_step` | `bool` | `False` | Force single-step tool execution |
-| `client` | `Any \| None` | `None` | Pre-configured `cohere.ClientV2` instance |
+## Constructor reference
 
-## Capabilities
+| Parameter | Annotation | Source default |
+| --- | --- | --- |
+| `model` | `str` | `'command-a-03-2025'` |
+| `api_key` | `str \| None` | `None` |
+| `temperature` | `float` | `0.3` |
+| `max_tokens` | `int` | `4096` |
+| `preamble` | `str \| None` | `None` |
+| `force_single_step` | `bool` | `False` |
+| `client` | `Any \| None` | `None` |
 
-| Capability | Value |
-|---|---|
-| Tool calling | Yes |
-| Parallel tool calls | No |
-| Input modalities | text |
-| Streaming | Fallback |
-| Usage metrics | Basic |
-| Reasoning metadata | No |
-| Native async | No (uses thread fallback) |
-
-## Recommended Models
-
-- `command-a-03-2025` — Most capable, best tool use (default)
-- `command-r-plus-08-2024` — Strong RAG + multi-step tool use
-- `command-r-08-2024` — Fast, cheaper, solid tool calling
-- `command-r7b-12-2024` — Lightweight, near-free
-
-## Strengths
-
-- **Native RAG / document grounding** — Cohere models are built for retrieval-augmented generation
-- **Multi-step agentic tool use** — Built into the model, not just bolted on
-- **Structured JSON output** — Reliable JSON generation
-- **Complex reasoning chains** — Excellent at multi-hop reasoning
-
-## Full Example
+## Inspect capabilities
 
 ```python
-from mtp import Agent
-from mtp.providers import Cohere
-
-Agent.load_dotenv_if_available()
-
-provider = Cohere(
-    model="command-a-03-2025",
-    temperature=0.3,
-    max_tokens=4096,
-    preamble="You are a precise tool-using assistant.",
-)
-
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-reply = agent.run_loop(
-    "Calculate (25 * 4) + 10 and explain.",
-    max_rounds=3,
-)
-print(reply)
+print(provider.capabilities())
 ```
 
-## Notes
+Capabilities describe the adapter's tools, streaming, media, structured output, and async behavior. The selected model and account can impose further restrictions. See the [provider contract](../PROVIDERS.md).
 
-- Uses Cohere V2 API (`ClientV2`) with OpenAI-compatible message format.
-- Tool names with dots (`.`) are converted to double underscores (`__`) for Cohere compatibility, then converted back in responses.
-- The `preamble` parameter is Cohere's equivalent of a system prompt. If a system message is already in the conversation, `preamble` is not injected.
-- Text-only input (no image/audio/video/file support).
+The adapter declares the following contract in this source release:
 
-## Source
+```python
+def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            provider="cohere",
+            supports_tool_calling=True,
+            supports_parallel_tool_calls=False,
+            input_modalities=["text"],
+            supports_tool_media_output=False,
+            supports_finalize_streaming=False,
+            usage_metrics_quality=USAGE_METRICS_BASIC,
+            supports_reasoning_metadata=False,
+            structured_output_support=STRUCTURED_OUTPUT_CLIENT_VALIDATED,
+            supports_native_async=False,
+            allow_finalize_stream_fallback=True,
+        )
+```
 
-`src/mtp/providers/cohere_provider.py`
+## Source and related guides
+
+- [Adapter source](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/providers/cohere_provider.py).
+- [Provider setup and model selection](../TUI_OPERATING_GUIDE.md).
+- [Runtime events](../EVENTS.md).
+- [Agent API](../AGENT_API.md).

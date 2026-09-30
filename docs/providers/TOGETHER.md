@@ -1,135 +1,76 @@
-# Together AI Provider
+# TogetherAI provider
 
-Together AI hosts 200+ open-source models with an OpenAI-compatible API. Great for running large open models without vendor lock-in.
+`TogetherAI` is the public alias for `TogetherAIToolCallingProvider`. This guide derives its constructor from MTPX 0.1.37.
 
-## Install
-
-```bash
-pip install "mtpx[togetherai]"
-```
-
-This installs the `openai` SDK. Alternatively, install the native Together SDK:
+## Install and configure
 
 ```bash
-pip install together
+python -m pip install "mtpx[togetherai]"
+mtp doctor --provider togetherai
 ```
 
-## API Key Setup
+Set `TOGETHER_API_KEY` in your process environment before constructing the provider. The SDK does not automatically load `.env`. To use a `.env` file, install `mtpx[dotenv]` and call `Agent.load_dotenv_if_available()` first.
 
-### Option 1: `.env` file (recommended)
+Constructor model defaults below come from this release's code. They are offline defaults, not a guarantee of current provider availability or account access. Enter an available model ID, or use `/model` in the terminal UI to discover models.
 
-1. Install dotenv support:
-   ```bash
-   pip install python-dotenv
-   ```
-   Or with the MTP extra:
-   ```bash
-   pip install "mtpx[dotenv]"
-   ```
-
-2. Create a `.env` file in your project root:
-   ```
-   TOGETHER_API_KEY=your_key_here
-   ```
-
-3. Load it in your code **before** creating the provider:
-   ```python
-   from mtp import Agent
-
-   Agent.load_dotenv_if_available()  # reads .env file
-   ```
-
-Get a free API key at [api.together.ai](https://api.together.ai) ($1 credit on signup).
-
-### Option 2: System environment variable
-
-```bash
-# Linux/macOS
-export TOGETHER_API_KEY="..."
-
-# Windows PowerShell
-$env:TOGETHER_API_KEY="..."
-```
-
-## Quick Start
+## Create an agent
 
 ```python
 from mtp import Agent
 from mtp.providers import TogetherAI
+from mtp.toolkits import CalculatorToolkit
 
-Agent.load_dotenv_if_available()  # loads TOGETHER_API_KEY from .env
-
-provider = TogetherAI(model="meta-llama/Llama-4-Scout-17B-16E-Instruct")
 tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-reply = agent.run_loop("What is 25 * 4 + 10?")
-print(reply)
+tools.register_toolkit_loader("calculator", CalculatorToolkit())
+provider = TogetherAI()
+agent = Agent.MTPAgent(provider=provider, tools=tools)
+print(agent.run("What is 25 * 4 + 10?", max_rounds=4))
 ```
 
-## Parameters
+This example makes a provider request. The [offline quickstart](../website/QUICKSTART.md) needs no credentials.
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `model` | `str` | `"meta-llama/Llama-4-Scout-17B-16E-Instruct"` | Together AI model ID (format: `org/model`) |
-| `api_key` | `str \| None` | `None` | API key (falls back to `TOGETHER_API_KEY` env var) |
-| `temperature` | `float` | `0.0` | Sampling temperature |
-| `tool_choice` | `str \| dict` | `"auto"` | Tool selection strategy |
-| `parallel_tool_calls` | `bool` | `True` | Allow parallel tool calls |
-| `max_tokens` | `int` | `4096` | Maximum response tokens |
-| `client` | `Any \| None` | `None` | Pre-configured client instance |
+## Constructor reference
 
-## Capabilities
+| Parameter | Annotation | Source default |
+| --- | --- | --- |
+| `model` | `str` | `'meta-llama/Llama-4-Scout-17B-16E-Instruct'` |
+| `api_key` | `str \| None` | `None` |
+| `temperature` | `float` | `0.0` |
+| `tool_choice` | `str \| dict[str, Any]` | `'auto'` |
+| `parallel_tool_calls` | `bool` | `True` |
+| `max_tokens` | `int` | `4096` |
+| `client` | `Any \| None` | `None` |
 
-| Capability | Value |
-|---|---|
-| Tool calling | Yes (model-dependent) |
-| Parallel tool calls | Yes (configurable) |
-| Input modalities | text, image |
-| Streaming | Fallback |
-| Usage metrics | Rich |
-| Reasoning metadata | No |
-| Native async | No (uses thread fallback) |
-
-## Recommended Models for Tool Calling
-
-- `meta-llama/Llama-4-Scout-17B-16E-Instruct` — Best tool use (default)
-- `meta-llama/Llama-3.3-70B-Instruct-Turbo` — Fast, reliable
-- `Qwen/Qwen2.5-72B-Instruct-Turbo` — Excellent reasoning
-- `deepseek-ai/DeepSeek-V3` — Top-tier reasoning
-- `mistralai/Mixtral-8x22B-Instruct-v0.1` — Strong + fast
-
-## Full Example
+## Inspect capabilities
 
 ```python
-from mtp import Agent
-from mtp.providers import TogetherAI
-
-Agent.load_dotenv_if_available()
-
-provider = TogetherAI(
-    model="meta-llama/Llama-4-Scout-17B-16E-Instruct",
-    temperature=0.0,
-    max_tokens=4096,
-)
-
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-reply = agent.run_loop(
-    "Calculate (25 * 4) + 10",
-    max_rounds=3,
-)
-print(reply)
+print(provider.capabilities())
 ```
 
-## Notes
+Capabilities describe the adapter's tools, streaming, media, structured output, and async behavior. The selected model and account can impose further restrictions. See the [provider contract](../PROVIDERS.md).
 
-- Together AI prefers the native `together` SDK when available, falls back to OpenAI client at `https://api.together.xyz/v1`.
-- Model IDs use the format `org/model-name` (e.g., `meta-llama/Llama-4-Scout-17B-16E-Instruct`).
-- Widest model selection of any provider — great for comparing model performance on the same task.
-- Competitive pricing (~$0.18/1M tokens for 70B models).
+The adapter declares the following contract in this source release:
 
-## Source
+```python
+def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            provider="together",
+            supports_tool_calling=True,
+            supports_parallel_tool_calls=bool(self.parallel_tool_calls),
+            input_modalities=["text", "image"],
+            supports_tool_media_output=True,
+            supports_finalize_streaming=False,
+            usage_metrics_quality=USAGE_METRICS_RICH,
+            supports_reasoning_metadata=False,
+            structured_output_support=STRUCTURED_OUTPUT_CLIENT_VALIDATED,
+            supports_native_async=False,
+            allow_finalize_stream_fallback=True,
+        )
+```
 
-`src/mtp/providers/together_provider.py`
+## Source and related guides
+
+- [Adapter source](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/providers/together_provider.py).
+- [Provider setup and model selection](../TUI_OPERATING_GUIDE.md).
+- [Runtime events](../EVENTS.md).
+- [Agent API](../AGENT_API.md).

@@ -1,131 +1,75 @@
-# Mistral Provider
+# Mistral provider
 
-Mistral AI provides fast, capable models with native tool calling support.
+`Mistral` is the public alias for `MistralToolCallingProvider`. This guide derives its constructor from MTPX 0.1.37.
 
-## Install
-
-```bash
-pip install "mtpx[mistral]"
-```
-
-Or install the SDK directly:
+## Install and configure
 
 ```bash
-pip install mistralai
+python -m pip install "mtpx[mistral]"
+mtp doctor --provider mistral
 ```
 
-## API Key Setup
+Set `MISTRAL_API_KEY` in your process environment before constructing the provider. The SDK does not automatically load `.env`. To use a `.env` file, install `mtpx[dotenv]` and call `Agent.load_dotenv_if_available()` first.
 
-### Option 1: `.env` file (recommended)
+Constructor model defaults below come from this release's code. They are offline defaults, not a guarantee of current provider availability or account access. Enter an available model ID, or use `/model` in the terminal UI to discover models.
 
-1. Install dotenv support:
-   ```bash
-   pip install python-dotenv
-   ```
-   Or with the MTP extra:
-   ```bash
-   pip install "mtpx[dotenv]"
-   ```
-
-2. Create a `.env` file in your project root:
-   ```
-   MISTRAL_API_KEY=your_key_here
-   ```
-
-3. Load it in your code **before** creating the provider:
-   ```python
-   from mtp import Agent
-
-   Agent.load_dotenv_if_available()  # reads .env file
-   ```
-
-Get an API key at [console.mistral.ai](https://console.mistral.ai).
-
-### Option 2: System environment variable
-
-```bash
-# Linux/macOS
-export MISTRAL_API_KEY="..."
-
-# Windows PowerShell
-$env:MISTRAL_API_KEY="..."
-```
-
-## Quick Start
+## Create an agent
 
 ```python
 from mtp import Agent
 from mtp.providers import Mistral
+from mtp.toolkits import CalculatorToolkit
 
-Agent.load_dotenv_if_available()  # loads MISTRAL_API_KEY from .env
-
-provider = Mistral(model="mistral-large-latest")
 tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-reply = agent.run_loop("What is 25 * 4 + 10?")
-print(reply)
+tools.register_toolkit_loader("calculator", CalculatorToolkit())
+provider = Mistral()
+agent = Agent.MTPAgent(provider=provider, tools=tools)
+print(agent.run("What is 25 * 4 + 10?", max_rounds=4))
 ```
 
-## Parameters
+This example makes a provider request. The [offline quickstart](../website/QUICKSTART.md) needs no credentials.
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `model` | `str` | `"mistral-large-latest"` | Mistral model ID |
-| `api_key` | `str \| None` | `None` | API key (falls back to `MISTRAL_API_KEY` env var) |
-| `temperature` | `float` | `0.0` | Sampling temperature |
-| `tool_choice` | `str` | `"auto"` | Tool selection: `"auto"`, `"none"`, `"any"`, or specific tool name |
-| `parallel_tool_calls` | `bool` | `True` | Allow parallel tool calls |
-| `client` | `Any \| None` | `None` | Pre-configured `Mistral` client instance |
+## Constructor reference
 
-## Capabilities
+| Parameter | Annotation | Source default |
+| --- | --- | --- |
+| `model` | `str` | `'mistral-large-latest'` |
+| `api_key` | `str \| None` | `None` |
+| `temperature` | `float` | `0.0` |
+| `tool_choice` | `str` | `'auto'` |
+| `parallel_tool_calls` | `bool` | `True` |
+| `client` | `Any \| None` | `None` |
 
-| Capability | Value |
-|---|---|
-| Tool calling | Yes |
-| Parallel tool calls | No |
-| Input modalities | text |
-| Streaming | Fallback |
-| Usage metrics | Basic |
-| Reasoning metadata | No |
-| Native async | No (uses thread fallback) |
-
-## Recommended Models
-
-- `mistral-large-latest` — Best tool calling (default)
-- `mistral-small-latest` — Fast, cheaper
-- `codestral-latest` — Code-focused
-
-## Full Example
+## Inspect capabilities
 
 ```python
-from mtp import Agent
-from mtp.providers import Mistral
-
-Agent.load_dotenv_if_available()
-
-provider = Mistral(
-    model="mistral-large-latest",
-    temperature=0.0,
-    tool_choice="auto",
-)
-
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-reply = agent.run_loop(
-    "Calculate (25 * 4) + 10",
-    max_rounds=3,
-)
-print(reply)
+print(provider.capabilities())
 ```
 
-## Notes
+Capabilities describe the adapter's tools, streaming, media, structured output, and async behavior. The selected model and account can impose further restrictions. See the [provider contract](../PROVIDERS.md).
 
-- Mistral uses the `mistralai` SDK with `client.chat.complete()` API.
-- Text-only input (no image/audio/video/file support).
-- Usage metrics extraction is basic (prompt/completion/total tokens).
+The adapter declares the following contract in this source release:
 
-## Source
+```python
+def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            provider="mistral",
+            supports_tool_calling=True,
+            supports_parallel_tool_calls=False,
+            input_modalities=["text"],
+            supports_tool_media_output=False,
+            supports_finalize_streaming=False,
+            usage_metrics_quality=USAGE_METRICS_BASIC,
+            supports_reasoning_metadata=False,
+            structured_output_support=STRUCTURED_OUTPUT_CLIENT_VALIDATED,
+            supports_native_async=False,
+            allow_finalize_stream_fallback=True,
+        )
+```
 
-`src/mtp/providers/mistral_provider.py`
+## Source and related guides
+
+- [Adapter source](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/providers/mistral_provider.py).
+- [Provider setup and model selection](../TUI_OPERATING_GUIDE.md).
+- [Runtime events](../EVENTS.md).
+- [Agent API](../AGENT_API.md).

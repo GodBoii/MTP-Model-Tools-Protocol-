@@ -119,7 +119,7 @@ tools.register_toolkit_loader("file", FileToolkit(base_dir="."))
 tools.register_toolkit_loader("python", PythonToolkit(base_dir="."))
 tools.register_toolkit_loader("shell", ShellToolkit(base_dir="."))
 
-provider = Groq(model="llama-3.3-70b-versatile")
+provider = Groq(model="openai/gpt-oss-120b")
 
 agent = Agent.MTPAgent(
     provider=provider,

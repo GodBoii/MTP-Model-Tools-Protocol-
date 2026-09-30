@@ -1,152 +1,74 @@
-# Anthropic Provider
+# Anthropic provider
 
-Anthropic Claude models with native tool-use API support. Uses Anthropic's block-based message format internally.
+`Anthropic` is the public alias for `AnthropicToolCallingProvider`. This guide derives its constructor from MTPX 0.1.37.
 
-## Install
-
-```bash
-pip install "mtpx[anthropic]"
-```
-
-Or install the SDK directly:
+## Install and configure
 
 ```bash
-pip install anthropic
+python -m pip install "mtpx[anthropic]"
+mtp doctor --provider anthropic
 ```
 
-## API Key Setup
+Set `ANTHROPIC_API_KEY` in your process environment before constructing the provider. The SDK does not automatically load `.env`. To use a `.env` file, install `mtpx[dotenv]` and call `Agent.load_dotenv_if_available()` first.
 
-### Option 1: `.env` file (recommended)
+Constructor model defaults below come from this release's code. They are offline defaults, not a guarantee of current provider availability or account access. Enter an available model ID, or use `/model` in the terminal UI to discover models.
 
-1. Install dotenv support:
-   ```bash
-   pip install python-dotenv
-   ```
-   Or with the MTP extra:
-   ```bash
-   pip install "mtpx[dotenv]"
-   ```
-
-2. Create a `.env` file in your project root:
-   ```
-   ANTHROPIC_API_KEY=sk-ant-your_key_here
-   ```
-
-3. Load it in your code **before** creating the provider:
-   ```python
-   from mtp import Agent
-
-   Agent.load_dotenv_if_available()  # reads .env file
-   ```
-
-Get an API key at [console.anthropic.com](https://console.anthropic.com).
-
-### Option 2: System environment variable
-
-```bash
-# Linux/macOS
-export ANTHROPIC_API_KEY="sk-ant-..."
-
-# Windows PowerShell
-$env:ANTHROPIC_API_KEY="sk-ant-..."
-```
-
-## Quick Start
+## Create an agent
 
 ```python
 from mtp import Agent
 from mtp.providers import Anthropic
-
-Agent.load_dotenv_if_available()  # loads ANTHROPIC_API_KEY from .env
-
-provider = Anthropic(model="claude-3-5-sonnet-20241022")
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-reply = agent.run_loop("What is 25 * 4 + 10?")
-print(reply)
-```
-
-## Parameters
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `model` | `str` | `"claude-3-5-sonnet-20241022"` | Anthropic model ID |
-| `api_key` | `str \| None` | `None` | API key (falls back to `ANTHROPIC_API_KEY` env var) |
-| `max_tokens` | `int` | `1024` | Maximum tokens in the response |
-| `temperature` | `float` | `0.0` | Sampling temperature |
-| `client` | `Any \| None` | `None` | Pre-configured `anthropic.Anthropic` client instance |
-
-## Capabilities
-
-| Capability | Value |
-|---|---|
-| Tool calling | Yes |
-| Parallel tool calls | Yes |
-| Input modalities | text, image, file |
-| Streaming | Fallback |
-| Usage metrics | Rich |
-| Reasoning metadata | No |
-| Native async | No (uses thread fallback) |
-
-## Recommended Models
-
-- `claude-3-5-sonnet-20241022` — Best balance of speed and capability (default)
-- `claude-3-5-haiku-20241022` — Fastest, cheapest
-- `claude-3-opus-20240229` — Most capable, slowest
-
-## Multimodal Support
-
-Anthropic supports images and files (PDFs, documents) natively:
-
-```python
-from mtp.media import Image, File
-
-provider = Anthropic(model="claude-3-5-sonnet-20241022")
-agent = Agent(provider=provider, tools=tools)
-
-# With image
-reply = agent.run_loop({
-    "content": "Describe this image",
-    "images": [Image(filepath="photo.jpg")],
-})
-
-# With PDF document
-reply = agent.run_loop({
-    "content": "Summarize this document",
-    "files": [File(filepath="report.pdf")],
-})
-```
-
-## Full Example
-
-```python
-from mtp import Agent
-from mtp.providers import Anthropic
-
-Agent.load_dotenv_if_available()
-
-provider = Anthropic(
-    model="claude-3-5-sonnet-20241022",
-    max_tokens=4096,
-    temperature=0.0,
-)
+from mtp.toolkits import CalculatorToolkit
 
 tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-reply = agent.run_loop(
-    "Calculate (25 * 4) + 10 and explain the steps.",
-    max_rounds=4,
-)
-print(reply)
+tools.register_toolkit_loader("calculator", CalculatorToolkit())
+provider = Anthropic()
+agent = Agent.MTPAgent(provider=provider, tools=tools)
+print(agent.run("What is 25 * 4 + 10?", max_rounds=4))
 ```
 
-## Notes
+This example makes a provider request. The [offline quickstart](../website/QUICKSTART.md) needs no credentials.
 
-- Anthropic uses a different internal message format (block-based with `tool_use` and `tool_result` content types), but MTP normalizes everything to the same event stream and `ExecutionPlan` semantics.
-- System prompts are sent as the `system` parameter, not as a message role.
+## Constructor reference
 
-## Source
+| Parameter | Annotation | Source default |
+| --- | --- | --- |
+| `model` | `str` | `'claude-3-5-sonnet-20241022'` |
+| `api_key` | `str \| None` | `None` |
+| `max_tokens` | `int` | `1024` |
+| `temperature` | `float` | `0.0` |
+| `client` | `Any \| None` | `None` |
 
-`src/mtp/providers/anthropic_provider.py`
+## Inspect capabilities
+
+```python
+print(provider.capabilities())
+```
+
+Capabilities describe the adapter's tools, streaming, media, structured output, and async behavior. The selected model and account can impose further restrictions. See the [provider contract](../PROVIDERS.md).
+
+The adapter declares the following contract in this source release:
+
+```python
+def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            provider="anthropic",
+            supports_tool_calling=True,
+            supports_parallel_tool_calls=True,
+            input_modalities=["text", "image", "file"],
+            supports_tool_media_output=True,
+            supports_finalize_streaming=False,
+            usage_metrics_quality=USAGE_METRICS_RICH,
+            supports_reasoning_metadata=False,
+            structured_output_support=STRUCTURED_OUTPUT_CLIENT_VALIDATED,
+            supports_native_async=False,
+            allow_finalize_stream_fallback=True,
+        )
+```
+
+## Source and related guides
+
+- [Adapter source](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/providers/anthropic_provider.py).
+- [Provider setup and model selection](../TUI_OPERATING_GUIDE.md).
+- [Runtime events](../EVENTS.md).
+- [Agent API](../AGENT_API.md).

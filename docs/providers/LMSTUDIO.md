@@ -1,114 +1,76 @@
-# LM Studio Provider
+# LMStudio provider
 
-LM Studio runs models locally with an OpenAI-compatible server. No cloud API key required.
+`LMStudio` is the public alias for `LMStudioToolCallingProvider`. This guide derives its constructor from MTPX 0.1.37.
 
-## Install
-
-```bash
-pip install "mtpx[lmstudio]"
-```
-
-This installs the `openai` SDK (used for the OpenAI-compatible API).
+## Install and configure
 
 ```bash
-pip install openai
+python -m pip install "mtpx[lmstudio]"
+mtp doctor --provider lmstudio
 ```
 
-## Setup
+Start the local inference server before making a request. Use `host` or `base_url` as listed below to select its endpoint. A local server normally needs no cloud API key.
 
-1. Download LM Studio from [lmstudio.ai](https://lmstudio.ai)
-2. Download a tool-capable model (e.g., Qwen 3, Llama 3.2)
-3. Start the local server (default: `http://127.0.0.1:1234/v1`)
-4. Load a model in the LM Studio UI
+Constructor model defaults below come from this release's code. They are offline defaults, not a guarantee of current provider availability or account access. Enter an available model ID, or use `/model` in the terminal UI to discover models.
 
-No API key is required for local usage. A dummy `"lm-studio"` key is used by default. If your LM Studio instance requires auth, set `LMSTUDIO_API_KEY` in your `.env` file.
-
-## Quick Start
+## Create an agent
 
 ```python
 from mtp import Agent
 from mtp.providers import LMStudio
-
-# No API key needed for local LM Studio
-provider = LMStudio(model="qwen3-4b-thinking-2507")
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-reply = agent.run_loop("What is 25 * 4 + 10?")
-print(reply)
-```
-
-## Parameters
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `model` | `str` | `"qwen3"` | Model name as loaded in LM Studio |
-| `base_url` | `str` | `"http://127.0.0.1:1234/v1"` | LM Studio server URL |
-| `api_key` | `str \| None` | `None` | API key (falls back to `LMSTUDIO_API_KEY` env var, then `"lm-studio"`) |
-| `temperature` | `float` | `0.0` | Sampling temperature |
-| `tool_choice` | `str \| dict` | `"auto"` | Tool selection strategy |
-| `parallel_tool_calls` | `bool` | `True` | Allow parallel tool calls |
-| `client` | `Any \| None` | `None` | Pre-configured `openai.OpenAI` client instance |
-
-## Capabilities
-
-| Capability | Value |
-|---|---|
-| Tool calling | Yes (if model supports it) |
-| Parallel tool calls | Yes (configurable) |
-| Input modalities | text, image |
-| Streaming | Yes (both `stream_next_action` and `finalize_stream`) |
-| Usage metrics | Rich |
-| Reasoning metadata | No |
-| Native async | No (uses thread fallback) |
-
-## Streaming
-
-LM Studio supports both planning and finalization streaming with reasoning chunk support:
-
-```python
-for event in agent.run_loop_events(
-    "Calculate 25 * 4",
-    max_rounds=2,
-    stream_final=True,
-):
-    if isinstance(event, dict):
-        if event.get("type") == "reasoning_chunk":
-            print("[thinking]", event["chunk"])
-        elif event.get("type") == "text_chunk":
-            print(event["chunk"], end="", flush=True)
-```
-
-## Full Example
-
-```python
-from mtp import Agent
-from mtp.providers import LMStudio
-
-provider = LMStudio(
-    model="qwen3-4b-thinking-2507",
-    base_url="http://127.0.0.1:1234/v1",
-    temperature=0.0,
-    tool_choice="auto",
-    parallel_tool_calls=True,
-)
+from mtp.toolkits import CalculatorToolkit
 
 tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-reply = agent.run_loop(
-    "Calculate (25 * 4) + 10",
-    max_rounds=3,
-)
-print(reply)
+tools.register_toolkit_loader("calculator", CalculatorToolkit())
+provider = LMStudio()
+agent = Agent.MTPAgent(provider=provider, tools=tools)
+print(agent.run("What is 25 * 4 + 10?", max_rounds=4))
 ```
 
-## Notes
+This example makes a provider request. The [offline quickstart](../website/QUICKSTART.md) needs no credentials.
 
-- LM Studio uses the OpenAI SDK under the hood, pointed at the local server.
-- Tool calling support depends on the loaded model. Use Qwen 3, Llama 3.2, or other tool-capable models.
-- The `parallel_tool_calls` parameter may be ignored by some model/SDK versions (handled gracefully with fallback).
+## Constructor reference
 
-## Source
+| Parameter | Annotation | Source default |
+| --- | --- | --- |
+| `model` | `str` | `'qwen3'` |
+| `base_url` | `str` | `'http://127.0.0.1:1234/v1'` |
+| `api_key` | `str \| None` | `None` |
+| `temperature` | `float` | `0.0` |
+| `tool_choice` | `str \| dict[str, Any]` | `'auto'` |
+| `parallel_tool_calls` | `bool` | `True` |
+| `client` | `Any \| None` | `None` |
 
-`src/mtp/providers/lmstudio_provider.py`
+## Inspect capabilities
+
+```python
+print(provider.capabilities())
+```
+
+Capabilities describe the adapter's tools, streaming, media, structured output, and async behavior. The selected model and account can impose further restrictions. See the [provider contract](../PROVIDERS.md).
+
+The adapter declares the following contract in this source release:
+
+```python
+def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            provider="lmstudio",
+            supports_tool_calling=True,
+            supports_parallel_tool_calls=bool(self.parallel_tool_calls),
+            input_modalities=["text", "image"],
+            supports_tool_media_output=True,
+            supports_finalize_streaming=True,
+            usage_metrics_quality=USAGE_METRICS_RICH,
+            supports_reasoning_metadata=False,
+            structured_output_support=STRUCTURED_OUTPUT_CLIENT_VALIDATED,
+            supports_native_async=False,
+            allow_finalize_stream_fallback=True,
+        )
+```
+
+## Source and related guides
+
+- [Adapter source](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/providers/lmstudio_provider.py).
+- [Provider setup and model selection](../TUI_OPERATING_GUIDE.md).
+- [Runtime events](../EVENTS.md).
+- [Agent API](../AGENT_API.md).

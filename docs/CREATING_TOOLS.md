@@ -51,7 +51,7 @@ registry.register_toolkit_loader("custom", toolkit)
 from mtp import Agent
 from mtp.providers import Groq
 
-provider = Groq(model="llama-3.3-70b-versatile")
+provider = Groq(model="openai/gpt-oss-120b")
 agent = Agent.MTPAgent(provider=provider, tools=registry)
 print(agent.run("Use custom.add with a=20 and b=22"))
 ```

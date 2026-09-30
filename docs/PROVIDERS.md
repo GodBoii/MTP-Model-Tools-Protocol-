@@ -70,7 +70,7 @@ This prevents providers from silently over-promising features in production.
 ```python
 from mtp.providers import Groq
 
-provider = Groq(model="llama-3.3-70b-versatile")
+provider = Groq(model="openai/gpt-oss-120b")
 ```
 
 ## Built-in usage (explicit style)
@@ -78,7 +78,7 @@ provider = Groq(model="llama-3.3-70b-versatile")
 ```python
 from mtp.providers import GroqToolCallingProvider
 
-provider = GroqToolCallingProvider(model="llama-3.3-70b-versatile")
+provider = GroqToolCallingProvider(model="openai/gpt-oss-120b")
 ```
 
 ## Add a new provider

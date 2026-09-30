@@ -1,154 +1,73 @@
-# Gemini Provider
+# Gemini provider
 
-Google Gemini models with native function calling and full multimodal support (text, image, audio, video, file).
+`Gemini` is the public alias for `GeminiToolCallingProvider`. This guide derives its constructor from MTPX 0.1.37.
 
-## Install
-
-```bash
-pip install "mtpx[gemini]"
-```
-
-Or install the SDK directly:
+## Install and configure
 
 ```bash
-pip install google-genai
+python -m pip install "mtpx[gemini]"
+mtp doctor --provider gemini
 ```
 
-## API Key Setup
+Set `GEMINI_API_KEY` in your process environment before constructing the provider. The SDK does not automatically load `.env`. To use a `.env` file, install `mtpx[dotenv]` and call `Agent.load_dotenv_if_available()` first.
 
-### Option 1: `.env` file (recommended)
+Constructor model defaults below come from this release's code. They are offline defaults, not a guarantee of current provider availability or account access. Enter an available model ID, or use `/model` in the terminal UI to discover models.
 
-1. Install dotenv support:
-   ```bash
-   pip install python-dotenv
-   ```
-   Or with the MTP extra:
-   ```bash
-   pip install "mtpx[dotenv]"
-   ```
-
-2. Create a `.env` file in your project root:
-   ```
-   GEMINI_API_KEY=AIzaSyour_key_here
-   ```
-
-3. Load it in your code **before** creating the provider:
-   ```python
-   from mtp import Agent
-
-   Agent.load_dotenv_if_available()  # reads .env file
-   ```
-
-Get a free API key at [aistudio.google.com](https://aistudio.google.com).
-
-### Option 2: System environment variable
-
-```bash
-# Linux/macOS
-export GEMINI_API_KEY="AIza..."
-
-# Windows PowerShell
-$env:GEMINI_API_KEY="AIza..."
-```
-
-## Quick Start
+## Create an agent
 
 ```python
 from mtp import Agent
 from mtp.providers import Gemini
-
-Agent.load_dotenv_if_available()  # loads GEMINI_API_KEY from .env
-
-provider = Gemini(model="gemini-2.0-flash")
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-reply = agent.run_loop("What is 25 * 4 + 10?")
-print(reply)
-```
-
-## Parameters
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `model` | `str` | `"gemini-2.0-flash"` | Gemini model ID |
-| `api_key` | `str \| None` | `None` | API key (falls back to `GEMINI_API_KEY` env var) |
-| `temperature` | `float` | `0.0` | Sampling temperature |
-| `client` | `Any \| None` | `None` | Pre-configured `google.genai.Client` instance |
-
-## Capabilities
-
-| Capability | Value |
-|---|---|
-| Tool calling | Yes |
-| Parallel tool calls | No |
-| Input modalities | text, image, audio, video, file |
-| Streaming | Fallback |
-| Usage metrics | Rich |
-| Reasoning metadata | No |
-| Native async | No (uses thread fallback) |
-
-## Recommended Models
-
-- `gemini-2.0-flash` — Fast, good tool calling (default)
-- `gemini-2.5-pro` — Most capable, best reasoning
-- `gemini-2.0-flash-lite` — Cheapest option
-
-## Multimodal Support
-
-Gemini supports all modalities natively:
-
-```python
-from mtp.media import Image, Audio, Video, File
-
-# With image
-reply = agent.run_loop({
-    "content": "Describe this image",
-    "images": [Image(filepath="photo.jpg")],
-})
-
-# With audio
-reply = agent.run_loop({
-    "content": "Transcribe this audio",
-    "audios": [Audio(filepath="speech.mp3")],
-})
-
-# With video
-reply = agent.run_loop({
-    "content": "What happens in this video?",
-    "videos": [Video(filepath="clip.mp4")],
-})
-```
-
-## Full Example
-
-```python
-from mtp import Agent
-from mtp.providers import Gemini
-
-Agent.load_dotenv_if_available()
-
-provider = Gemini(
-    model="gemini-2.0-flash",
-    temperature=0.0,
-)
+from mtp.toolkits import CalculatorToolkit
 
 tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-reply = agent.run_loop(
-    "Calculate (25 * 4) + 10 and list files in the current directory.",
-    max_rounds=4,
-)
-print(reply)
+tools.register_toolkit_loader("calculator", CalculatorToolkit())
+provider = Gemini()
+agent = Agent.MTPAgent(provider=provider, tools=tools)
+print(agent.run("What is 25 * 4 + 10?", max_rounds=4))
 ```
 
-## Notes
+This example makes a provider request. The [offline quickstart](../website/QUICKSTART.md) needs no credentials.
 
-- Gemini uses `function_declarations` in tools (not the OpenAI `function` wrapper format). MTP handles the translation automatically.
-- Tool schemas are sanitized to remove unsupported JSON Schema keys before sending to Gemini.
-- Parallel tool calls are not supported by Gemini's API as of now.
+## Constructor reference
 
-## Source
+| Parameter | Annotation | Source default |
+| --- | --- | --- |
+| `model` | `str` | `'gemini-2.0-flash'` |
+| `api_key` | `str \| None` | `None` |
+| `temperature` | `float` | `0.0` |
+| `client` | `Any \| None` | `None` |
 
-`src/mtp/providers/gemini_provider.py`
+## Inspect capabilities
+
+```python
+print(provider.capabilities())
+```
+
+Capabilities describe the adapter's tools, streaming, media, structured output, and async behavior. The selected model and account can impose further restrictions. See the [provider contract](../PROVIDERS.md).
+
+The adapter declares the following contract in this source release:
+
+```python
+def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            provider="gemini",
+            supports_tool_calling=True,
+            supports_parallel_tool_calls=False,
+            input_modalities=["text", "image", "audio", "video", "file"],
+            supports_tool_media_output=True,
+            supports_finalize_streaming=False,
+            usage_metrics_quality=USAGE_METRICS_RICH,
+            supports_reasoning_metadata=False,
+            structured_output_support=STRUCTURED_OUTPUT_CLIENT_VALIDATED,
+            supports_native_async=False,
+            allow_finalize_stream_fallback=True,
+        )
+```
+
+## Source and related guides
+
+- [Adapter source](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/providers/gemini_provider.py).
+- [Provider setup and model selection](../TUI_OPERATING_GUIDE.md).
+- [Runtime events](../EVENTS.md).
+- [Agent API](../AGENT_API.md).

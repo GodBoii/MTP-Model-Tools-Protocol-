@@ -1,137 +1,82 @@
-# Groq Provider
+# Groq provider
 
-Groq provides ultra-fast cloud inference using their custom LPU hardware. Best for low-latency agent workflows with OpenAI-compatible tool schemas.
+`Groq` is the public alias for `GroqToolCallingProvider`. This guide derives its constructor from MTPX 0.1.37.
 
-## Install
-
-```bash
-pip install "mtpx[groq]"
-```
-
-Or install the SDK directly:
+## Install and configure
 
 ```bash
-pip install groq
+python -m pip install "mtpx[groq]"
+mtp doctor --provider groq
 ```
 
-## API Key Setup
+Set `GROQ_API_KEY` in your process environment before constructing the provider. The SDK does not automatically load `.env`. To use a `.env` file, install `mtpx[dotenv]` and call `Agent.load_dotenv_if_available()` first.
 
-### Option 1: `.env` file (recommended)
+Constructor model defaults below come from this release's code. They are offline defaults, not a guarantee of current provider availability or account access. Enter an available model ID, or use `/model` in the terminal UI to discover models.
 
-1. Install dotenv support:
-   ```bash
-   pip install python-dotenv
-   ```
-   Or with the MTP extra:
-   ```bash
-   pip install "mtpx[dotenv]"
-   ```
-
-2. Create a `.env` file in your project root:
-   ```
-   GROQ_API_KEY=gsk_your_key_here
-   ```
-
-3. Load it in your code **before** creating the provider:
-   ```python
-   from mtp import Agent
-
-   Agent.load_dotenv_if_available()  # reads .env file
-   ```
-
-Get a free API key at [console.groq.com](https://console.groq.com).
-
-### Option 2: System environment variable
-
-```bash
-# Linux/macOS
-export GROQ_API_KEY="gsk_..."
-
-# Windows PowerShell
-$env:GROQ_API_KEY="gsk_..."
-```
-
-## Quick Start
+## Create an agent
 
 ```python
 from mtp import Agent
 from mtp.providers import Groq
+from mtp.toolkits import CalculatorToolkit
 
-Agent.load_dotenv_if_available()  # loads GROQ_API_KEY from .env
-
-provider = Groq(model="llama-3.3-70b-versatile")
 tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-reply = agent.run_loop("What is 25 * 4 + 10?")
-print(reply)
+tools.register_toolkit_loader("calculator", CalculatorToolkit())
+provider = Groq()
+agent = Agent.MTPAgent(provider=provider, tools=tools)
+print(agent.run("What is 25 * 4 + 10?", max_rounds=4))
 ```
 
-## Parameters
+This example makes a provider request. The [offline quickstart](../website/QUICKSTART.md) needs no credentials.
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `model` | `str` | `"llama-3.3-70b-versatile"` | Groq model ID |
-| `api_key` | `str \| None` | `None` | API key (falls back to `GROQ_API_KEY` env var) |
-| `system_prompt` | `str \| None` | `None` | System prompt prepended to all requests |
-| `temperature` | `float` | `0.0` | Sampling temperature (0.0 = deterministic) |
-| `tool_choice` | `str \| dict` | `"auto"` | Tool selection strategy: `"auto"`, `"none"`, `"required"`, or specific tool |
-| `parallel_tool_calls` | `bool` | `True` | Allow model to call multiple tools in parallel |
-| `encourage_batch_tool_calls` | `bool` | `True` | Inject system hint to batch independent tool calls |
-| `strict_dependency_mode` | `bool` | `False` | Enable `$ref` based dependency tracking between tool calls |
-| `include_reasoning` | `bool \| None` | `None` | Include reasoning in response (for supported models) |
-| `reasoning_format` | `str \| None` | `None` | Format for reasoning output |
-| `reasoning_effort` | `str \| None` | `None` | Reasoning effort level |
-| `stream_include_usage` | `bool` | `True` | Include token usage in streaming responses |
-| `client` | `Any \| None` | `None` | Pre-configured `groq.Groq` client instance |
+## Constructor reference
 
-## Capabilities
+| Parameter | Annotation | Source default |
+| --- | --- | --- |
+| `model` | `str` | `'openai/gpt-oss-120b'` |
+| `api_key` | `str \| None` | `None` |
+| `system_prompt` | `str \| None` | `None` |
+| `temperature` | `float` | `0.0` |
+| `tool_choice` | `str \| dict[str, Any]` | `'auto'` |
+| `parallel_tool_calls` | `bool` | `True` |
+| `encourage_batch_tool_calls` | `bool` | `True` |
+| `strict_dependency_mode` | `bool` | `False` |
+| `include_reasoning` | `bool \| None` | `None` |
+| `reasoning_format` | `str \| None` | `None` |
+| `reasoning_effort` | `str \| None` | `None` |
+| `stream_include_usage` | `bool` | `True` |
+| `client` | `Any \| None` | `None` |
 
-| Capability | Value |
-|---|---|
-| Tool calling | Yes |
-| Parallel tool calls | Yes (configurable) |
-| Input modalities | text, image |
-| Streaming | Yes |
-| Usage metrics | Rich |
-| Reasoning metadata | Yes |
-| Native async | No (uses thread fallback) |
-
-## Recommended Models
-
-- `llama-3.3-70b-versatile` — Best balance of speed and tool calling (default)
-- `llama-3.1-8b-instant` — Fastest, good for simple tasks
-- `mixtral-8x7b-32768` — Large context window
-- `gemma2-9b-it` — Lightweight option
-
-## Full Example with Streaming
+## Inspect capabilities
 
 ```python
-from mtp import Agent
-from mtp.providers import Groq
-
-Agent.load_dotenv_if_available()
-
-provider = Groq(
-    model="llama-3.3-70b-versatile",
-    temperature=0.0,
-    parallel_tool_calls=True,
-    encourage_batch_tool_calls=True,
-    strict_dependency_mode=True,
-)
-
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-# Streaming events
-for event in agent.run_loop_events(
-    "Calculate (25 * 4) + 10",
-    max_rounds=3,
-    stream_final=True,
-):
-    print(event)
+print(provider.capabilities())
 ```
 
-## Source
+Capabilities describe the adapter's tools, streaming, media, structured output, and async behavior. The selected model and account can impose further restrictions. See the [provider contract](../PROVIDERS.md).
 
-`src/mtp/providers/groq_provider.py`
+The adapter declares the following contract in this source release:
+
+```python
+def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            provider="groq",
+            supports_tool_calling=True,
+            supports_parallel_tool_calls=bool(self.parallel_tool_calls),
+            input_modalities=["text", "image"],
+            supports_tool_media_output=True,
+            supports_finalize_streaming=True,
+            usage_metrics_quality=USAGE_METRICS_RICH,
+            supports_reasoning_metadata=True,
+            structured_output_support=STRUCTURED_OUTPUT_CLIENT_VALIDATED,
+            supports_native_async=False,
+            allow_finalize_stream_fallback=True,
+        )
+```
+
+## Source and related guides
+
+- [Adapter source](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/providers/groq_provider.py).
+- [Provider setup and model selection](../TUI_OPERATING_GUIDE.md).
+- [Runtime events](../EVENTS.md).
+- [Agent API](../AGENT_API.md).

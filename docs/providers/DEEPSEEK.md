@@ -1,146 +1,77 @@
-# DeepSeek Provider
+# DeepSeek provider
 
-DeepSeek offers powerful reasoning models with OpenAI-compatible API. The R1 reasoner exposes chain-of-thought reasoning traces.
+`DeepSeek` is the public alias for `DeepSeekToolCallingProvider`. This guide derives its constructor from MTPX 0.1.37.
 
-## Install
-
-```bash
-pip install "mtpx[deepseek]"
-```
-
-This installs the `openai` SDK (used for the OpenAI-compatible API):
+## Install and configure
 
 ```bash
-pip install openai
+python -m pip install "mtpx[deepseek]"
+mtp doctor --provider deepseek
 ```
 
-## API Key Setup
+Set `DEEPSEEK_API_KEY` in your process environment before constructing the provider. The SDK does not automatically load `.env`. To use a `.env` file, install `mtpx[dotenv]` and call `Agent.load_dotenv_if_available()` first.
 
-### Option 1: `.env` file (recommended)
+Constructor model defaults below come from this release's code. They are offline defaults, not a guarantee of current provider availability or account access. Enter an available model ID, or use `/model` in the terminal UI to discover models.
 
-1. Install dotenv support:
-   ```bash
-   pip install python-dotenv
-   ```
-   Or with the MTP extra:
-   ```bash
-   pip install "mtpx[dotenv]"
-   ```
-
-2. Create a `.env` file in your project root:
-   ```
-   DEEPSEEK_API_KEY=sk-your_key_here
-   ```
-
-3. Load it in your code **before** creating the provider:
-   ```python
-   from mtp import Agent
-
-   Agent.load_dotenv_if_available()  # reads .env file
-   ```
-
-Get an API key at [platform.deepseek.com](https://platform.deepseek.com). Free tier credits available on signup.
-
-### Option 2: System environment variable
-
-```bash
-# Linux/macOS
-export DEEPSEEK_API_KEY="sk-..."
-
-# Windows PowerShell
-$env:DEEPSEEK_API_KEY="sk-..."
-```
-
-## Quick Start
+## Create an agent
 
 ```python
 from mtp import Agent
 from mtp.providers import DeepSeek
-
-Agent.load_dotenv_if_available()  # loads DEEPSEEK_API_KEY from .env
-
-provider = DeepSeek(model="deepseek-chat")
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-reply = agent.run_loop("What is 25 * 4 + 10?")
-print(reply)
-```
-
-## Parameters
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `model` | `str` | `"deepseek-chat"` | DeepSeek model ID |
-| `api_key` | `str \| None` | `None` | API key (falls back to `DEEPSEEK_API_KEY` env var) |
-| `temperature` | `float` | `0.0` | Sampling temperature |
-| `tool_choice` | `str \| dict` | `"auto"` | Tool selection strategy |
-| `parallel_tool_calls` | `bool` | `True` | Allow parallel tool calls |
-| `capture_reasoning` | `bool` | `True` | Capture R1 chain-of-thought reasoning trace |
-| `client` | `Any \| None` | `None` | Pre-configured `openai.OpenAI` client instance |
-
-## Capabilities
-
-| Capability | Value |
-|---|---|
-| Tool calling | Yes (V3 only, not R1) |
-| Parallel tool calls | Yes (V3 only) |
-| Input modalities | text |
-| Streaming | Fallback |
-| Usage metrics | Rich |
-| Reasoning metadata | Yes (R1 models) |
-| Native async | No (uses thread fallback) |
-
-## Models
-
-- `deepseek-chat` — DeepSeek-V3, best general-purpose + tool calling (default)
-- `deepseek-reasoner` — DeepSeek-R1, chain-of-thought reasoning model
-
-**Important**: `deepseek-reasoner` (R1) does NOT support tool calling. Use `deepseek-chat` (V3) for agent workflows with tools.
-
-## Reasoning Traces
-
-When using `deepseek-reasoner`, the chain-of-thought reasoning is captured automatically:
-
-```python
-provider = DeepSeek(
-    model="deepseek-reasoner",
-    capture_reasoning=True,
-)
-```
-
-The reasoning trace is available in `action_meta["reasoning"]` and included in serialized tool calls.
-
-## Full Example
-
-```python
-from mtp import Agent
-from mtp.providers import DeepSeek
-
-Agent.load_dotenv_if_available()
-
-# V3 for tool calling
-provider = DeepSeek(
-    model="deepseek-chat",
-    temperature=0.0,
-    parallel_tool_calls=True,
-    capture_reasoning=True,
-)
+from mtp.toolkits import CalculatorToolkit
 
 tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-reply = agent.run_loop(
-    "Calculate (25 * 4) + 10",
-    max_rounds=3,
-)
-print(reply)
+tools.register_toolkit_loader("calculator", CalculatorToolkit())
+provider = DeepSeek()
+agent = Agent.MTPAgent(provider=provider, tools=tools)
+print(agent.run("What is 25 * 4 + 10?", max_rounds=4))
 ```
 
-## Pricing
+This example makes a provider request. The [offline quickstart](../website/QUICKSTART.md) needs no credentials.
 
-DeepSeek is extremely cheap (~$0.07 / 1M input tokens for V3 as of mid-2025). Free tier credits available on signup.
+## Constructor reference
 
-## Source
+| Parameter | Annotation | Source default |
+| --- | --- | --- |
+| `model` | `str` | `'deepseek-chat'` |
+| `api_key` | `str \| None` | `None` |
+| `temperature` | `float` | `0.0` |
+| `tool_choice` | `str \| dict[str, Any]` | `'auto'` |
+| `parallel_tool_calls` | `bool` | `True` |
+| `capture_reasoning` | `bool` | `True` |
+| `client` | `Any \| None` | `None` |
 
-`src/mtp/providers/deepseek_provider.py`
+## Inspect capabilities
+
+```python
+print(provider.capabilities())
+```
+
+Capabilities describe the adapter's tools, streaming, media, structured output, and async behavior. The selected model and account can impose further restrictions. See the [provider contract](../PROVIDERS.md).
+
+The adapter declares the following contract in this source release:
+
+```python
+def capabilities(self) -> ProviderCapabilities:
+        is_reasoner = self._is_reasoner()
+        return ProviderCapabilities(
+            provider="deepseek",
+            supports_tool_calling=not is_reasoner,
+            supports_parallel_tool_calls=bool(self.parallel_tool_calls) and not is_reasoner,
+            input_modalities=["text"],
+            supports_tool_media_output=False,
+            supports_finalize_streaming=False,
+            usage_metrics_quality=USAGE_METRICS_RICH,
+            supports_reasoning_metadata=bool(self.capture_reasoning),
+            structured_output_support=STRUCTURED_OUTPUT_CLIENT_VALIDATED,
+            supports_native_async=False,
+            allow_finalize_stream_fallback=True,
+        )
+```
+
+## Source and related guides
+
+- [Adapter source](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/providers/deepseek_provider.py).
+- [Provider setup and model selection](../TUI_OPERATING_GUIDE.md).
+- [Runtime events](../EVENTS.md).
+- [Agent API](../AGENT_API.md).

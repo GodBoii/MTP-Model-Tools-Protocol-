@@ -1,162 +1,78 @@
-# Fireworks AI Provider
+# FireworksAI provider
 
-Fireworks AI specializes in FAST open-model inference using their FireAttention kernel — often 3-5x faster than competitors.
+`FireworksAI` is the public alias for `FireworksAIToolCallingProvider`. This guide derives its constructor from MTPX 0.1.37.
 
-## Install
-
-```bash
-pip install "mtpx[fireworksai]"
-```
-
-This installs the `openai` SDK. Alternatively, install the native Fireworks SDK:
+## Install and configure
 
 ```bash
-pip install fireworks-ai
+python -m pip install "mtpx[fireworksai]"
+mtp doctor --provider fireworksai
 ```
 
-## API Key Setup
+Set `FIREWORKS_API_KEY` in your process environment before constructing the provider. The SDK does not automatically load `.env`. To use a `.env` file, install `mtpx[dotenv]` and call `Agent.load_dotenv_if_available()` first.
 
-### Option 1: `.env` file (recommended)
+Constructor model defaults below come from this release's code. They are offline defaults, not a guarantee of current provider availability or account access. Enter an available model ID, or use `/model` in the terminal UI to discover models.
 
-1. Install dotenv support:
-   ```bash
-   pip install python-dotenv
-   ```
-   Or with the MTP extra:
-   ```bash
-   pip install "mtpx[dotenv]"
-   ```
-
-2. Create a `.env` file in your project root:
-   ```
-   FIREWORKS_API_KEY=fw_your_key_here
-   ```
-
-3. Load it in your code **before** creating the provider:
-   ```python
-   from mtp import Agent
-
-   Agent.load_dotenv_if_available()  # reads .env file
-   ```
-
-Get a free API key at [fireworks.ai](https://fireworks.ai) (free credits on signup).
-
-### Option 2: System environment variable
-
-```bash
-# Linux/macOS
-export FIREWORKS_API_KEY="fw_..."
-
-# Windows PowerShell
-$env:FIREWORKS_API_KEY="fw_..."
-```
-
-## Quick Start
+## Create an agent
 
 ```python
 from mtp import Agent
 from mtp.providers import FireworksAI
-
-Agent.load_dotenv_if_available()  # loads FIREWORKS_API_KEY from .env
-
-provider = FireworksAI(model="accounts/fireworks/models/llama-v3p3-70b-instruct")
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-reply = agent.run_loop("What is 25 * 4 + 10?")
-print(reply)
-```
-
-## Parameters
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `model` | `str` | `"accounts/fireworks/models/llama-v3p3-70b-instruct"` | Fireworks model ID (account-qualified) |
-| `api_key` | `str \| None` | `None` | API key (falls back to `FIREWORKS_API_KEY` env var) |
-| `temperature` | `float` | `0.0` | Sampling temperature |
-| `tool_choice` | `str \| dict` | `"auto"` | Tool selection strategy |
-| `parallel_tool_calls` | `bool` | `True` | Allow parallel tool calls |
-| `max_tokens` | `int` | `4096` | Maximum response tokens |
-| `response_format` | `dict \| None` | `None` | Structured output format (JSON schema) |
-| `client` | `Any \| None` | `None` | Pre-configured client instance |
-
-## Capabilities
-
-| Capability | Value |
-|---|---|
-| Tool calling | Yes |
-| Parallel tool calls | Yes (configurable) |
-| Input modalities | text, image |
-| Streaming | Fallback |
-| Usage metrics | Rich |
-| Reasoning metadata | No |
-| Structured output | Native JSON schema (when `response_format` set) |
-| Native async | No (uses thread fallback) |
-
-## Recommended Models
-
-- `accounts/fireworks/models/llama-v3p3-70b-instruct` — Best overall (default)
-- `accounts/fireworks/models/llama-v3p1-405b-instruct` — Most capable
-- `accounts/fireworks/models/qwen2p5-72b-instruct` — Top reasoning
-- `accounts/fireworks/models/deepseek-v3` — Best reasoning
-- `accounts/fireworks/models/mixtral-8x22b-instruct` — Fast + smart
-- `accounts/fireworks/models/firefunction-v2` — Purpose-built for tool calling
-
-## Structured Output
-
-Fireworks supports native JSON schema output:
-
-```python
-provider = FireworksAI(
-    model="accounts/fireworks/models/llama-v3p3-70b-instruct",
-    response_format={
-        "type": "json_schema",
-        "json_schema": {
-            "name": "result",
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "answer": {"type": "number"},
-                    "explanation": {"type": "string"},
-                },
-                "required": ["answer", "explanation"],
-            },
-        },
-    },
-)
-```
-
-## Full Example
-
-```python
-from mtp import Agent
-from mtp.providers import FireworksAI
-
-Agent.load_dotenv_if_available()
-
-provider = FireworksAI(
-    model="accounts/fireworks/models/llama-v3p3-70b-instruct",
-    temperature=0.0,
-    max_tokens=4096,
-)
+from mtp.toolkits import CalculatorToolkit
 
 tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-reply = agent.run_loop(
-    "Calculate (25 * 4) + 10",
-    max_rounds=3,
-)
-print(reply)
+tools.register_toolkit_loader("calculator", CalculatorToolkit())
+provider = FireworksAI()
+agent = Agent.MTPAgent(provider=provider, tools=tools)
+print(agent.run("What is 25 * 4 + 10?", max_rounds=4))
 ```
 
-## Notes
+This example makes a provider request. The [offline quickstart](../website/QUICKSTART.md) needs no credentials.
 
-- Fireworks prefers the native `fireworks-ai` SDK, falls back to OpenAI client at `https://api.fireworks.ai/inference/v1`.
-- Model IDs must be account-qualified (e.g., `accounts/fireworks/models/...`).
-- `firefunction-v2` is purpose-built for function/tool calling and may give better results for agent workflows.
-- When `response_format` is set, `structured_output_support` reports `native_json_schema` capability.
+## Constructor reference
 
-## Source
+| Parameter | Annotation | Source default |
+| --- | --- | --- |
+| `model` | `str` | `'accounts/fireworks/models/llama-v3p3-70b-instruct'` |
+| `api_key` | `str \| None` | `None` |
+| `temperature` | `float` | `0.0` |
+| `tool_choice` | `str \| dict[str, Any]` | `'auto'` |
+| `parallel_tool_calls` | `bool` | `True` |
+| `max_tokens` | `int` | `4096` |
+| `response_format` | `dict[str, Any] \| None` | `None` |
+| `client` | `Any \| None` | `None` |
 
-`src/mtp/providers/fireworks_provider.py`
+## Inspect capabilities
+
+```python
+print(provider.capabilities())
+```
+
+Capabilities describe the adapter's tools, streaming, media, structured output, and async behavior. The selected model and account can impose further restrictions. See the [provider contract](../PROVIDERS.md).
+
+The adapter declares the following contract in this source release:
+
+```python
+def capabilities(self) -> ProviderCapabilities:
+        structured = STRUCTURED_OUTPUT_NATIVE_JSON_SCHEMA if self.response_format else STRUCTURED_OUTPUT_CLIENT_VALIDATED
+        return ProviderCapabilities(
+            provider="fireworks",
+            supports_tool_calling=True,
+            supports_parallel_tool_calls=bool(self.parallel_tool_calls),
+            input_modalities=["text", "image"],
+            supports_tool_media_output=True,
+            supports_finalize_streaming=False,
+            usage_metrics_quality=USAGE_METRICS_RICH,
+            supports_reasoning_metadata=False,
+            structured_output_support=structured,
+            supports_native_async=False,
+            allow_finalize_stream_fallback=True,
+        )
+```
+
+## Source and related guides
+
+- [Adapter source](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/providers/fireworks_provider.py).
+- [Provider setup and model selection](../TUI_OPERATING_GUIDE.md).
+- [Runtime events](../EVENTS.md).
+- [Agent API](../AGENT_API.md).

@@ -1,0 +1,65 @@
+{
+  "revision": "72ffb74440f1620fdd71dd097198380fe12433fc",
+  "derived": [
+    {
+      "path": "docs/providers/GROQ.md",
+      "source": "src/mtp/providers/groq_provider.py"
+    },
+    {
+      "path": "docs/providers/OPENAI.md",
+      "source": "src/mtp/providers/openai_provider.py"
+    },
+    {
+      "path": "docs/providers/OPENROUTER.md",
+      "source": "src/mtp/providers/openrouter_provider.py"
+    },
+    {
+      "path": "docs/providers/ANTHROPIC.md",
+      "source": "src/mtp/providers/anthropic_provider.py"
+    },
+    {
+      "path": "docs/providers/GEMINI.md",
+      "source": "src/mtp/providers/gemini_provider.py"
+    },
+    {
+      "path": "docs/providers/SAMBANOVA.md",
+      "source": "src/mtp/providers/sambanova_provider.py"
+    },
+    {
+      "path": "docs/providers/CEREBRAS.md",
+      "source": "src/mtp/providers/cerebras_provider.py"
+    },
+    {
+      "path": "docs/providers/DEEPSEEK.md",
+      "source": "src/mtp/providers/deepseek_provider.py"
+    },
+    {
+      "path": "docs/providers/MISTRAL.md",
+      "source": "src/mtp/providers/mistral_provider.py"
+    },
+    {
+      "path": "docs/providers/COHERE.md",
+      "source": "src/mtp/providers/cohere_provider.py"
+    },
+    {
+      "path": "docs/providers/TOGETHER.md",
+      "source": "src/mtp/providers/together_provider.py"
+    },
+    {
+      "path": "docs/providers/FIREWORKS.md",
+      "source": "src/mtp/providers/fireworks_provider.py"
+    },
+    {
+      "path": "docs/providers/XIAOMI.md",
+      "source": "src/mtp/providers/xiaomi_provider.py"
+    },
+    {
+      "path": "docs/providers/OLLAMA.md",
+      "source": "src/mtp/providers/ollama_provider.py"
+    },
+    {
+      "path": "docs/providers/LMSTUDIO.md",
+      "source": "src/mtp/providers/lmstudio_provider.py"
+    }
+  ]
+}

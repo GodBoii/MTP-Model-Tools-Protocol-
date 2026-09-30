@@ -1,142 +1,77 @@
-# Ollama Provider
+# Ollama provider
 
-Ollama runs open-source models locally. No cloud API key required. Supports tool calling, streaming, and thinking/reasoning traces.
+`Ollama` is the public alias for `OllamaToolCallingProvider`. This guide derives its constructor from MTPX 0.1.37.
 
-## Install
-
-```bash
-pip install "mtpx[ollama]"
-```
-
-Or install the SDK directly:
+## Install and configure
 
 ```bash
-pip install ollama
+python -m pip install "mtpx[ollama]"
+mtp doctor --provider ollama
 ```
 
-## Setup
+Start the local inference server before making a request. Use `host` or `base_url` as listed below to select its endpoint. A local server normally needs no cloud API key.
 
-1. Install Ollama from [ollama.com](https://ollama.com)
-2. Pull a model:
-   ```bash
-   ollama pull qwen3:1.7b
-   ```
-3. Verify the server is running:
-   ```bash
-   ollama list
-   ```
+Constructor model defaults below come from this release's code. They are offline defaults, not a guarantee of current provider availability or account access. Enter an available model ID, or use `/model` in the terminal UI to discover models.
 
-No API key is required for local usage. For secured remote hosts, set `OLLAMA_API_KEY` in your `.env` file.
-
-## Quick Start
+## Create an agent
 
 ```python
 from mtp import Agent
 from mtp.providers import Ollama
-
-# No API key needed for local Ollama
-provider = Ollama(model="qwen3:1.7b")
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-reply = agent.run_loop("What is 25 * 4 + 10?")
-print(reply)
-```
-
-## Parameters
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `model` | `str` | `"qwen3"` | Ollama model name (must be pulled first) |
-| `host` | `str \| None` | `None` | Ollama server URL (default: `http://localhost:11434`) |
-| `api_key` | `str \| None` | `None` | Optional API key for secured hosts (falls back to `OLLAMA_API_KEY` env var) |
-| `options` | `dict \| None` | `None` | Ollama-specific options (e.g., `{"temperature": 0, "num_ctx": 4096}`) |
-| `format` | `dict \| str \| None` | `None` | Output format constraint (e.g., `"json"` or a JSON schema dict) |
-| `keep_alive` | `float \| str \| None` | `None` | How long to keep model in memory (e.g., `"5m"`, `300`) |
-| `think` | `bool \| None` | `None` | Enable thinking/reasoning traces (for models that support it) |
-| `client` | `Any \| None` | `None` | Pre-configured `ollama.Client` instance |
-
-## Capabilities
-
-| Capability | Value |
-|---|---|
-| Tool calling | Yes |
-| Parallel tool calls | Yes |
-| Input modalities | text, image |
-| Streaming | Yes (both `stream_next_action` and `finalize_stream`) |
-| Usage metrics | Rich |
-| Reasoning metadata | Yes (when `think=True`) |
-| Native async | No (uses thread fallback) |
-
-## Recommended Models
-
-- `qwen3:1.7b` — Lightweight, fast, good tool calling
-- `qwen3:4b` — Better quality, still fast
-- `qwen3:8b` — Strong tool calling
-- `llama3.2:3b` — Good general purpose
-- `mistral:7b` — Solid alternative
-- `deepseek-r1:1.5b` — Reasoning model with thinking traces
-
-## Thinking/Reasoning
-
-Enable thinking traces for models that support it:
-
-```python
-provider = Ollama(
-    model="qwen3:1.7b",
-    think=True,
-    options={"temperature": 0},
-)
-```
-
-When `think=True`, the provider:
-- Captures thinking tokens from the model
-- Surfaces them in `action_meta["reasoning"]`
-- Reports `supports_reasoning_metadata=True` in capabilities
-
-## Streaming
-
-Ollama supports both planning and finalization streaming:
-
-```python
-for event in agent.run_loop_events(
-    "Calculate 25 * 4",
-    max_rounds=2,
-    stream_final=True,
-):
-    print(event)
-```
-
-## Full Example
-
-```python
-from mtp import Agent
-from mtp.providers import Ollama
-
-provider = Ollama(
-    model="qwen3:1.7b",
-    host="http://localhost:11434",
-    think=True,
-    options={"temperature": 0},
-)
+from mtp.toolkits import CalculatorToolkit
 
 tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-reply = agent.run_loop(
-    "Calculate (25 * 4) + 10",
-    max_rounds=3,
-)
-print(reply)
+tools.register_toolkit_loader("calculator", CalculatorToolkit())
+provider = Ollama()
+agent = Agent.MTPAgent(provider=provider, tools=tools)
+print(agent.run("What is 25 * 4 + 10?", max_rounds=4))
 ```
 
-## Troubleshooting
+This example makes a provider request. The [offline quickstart](../website/QUICKSTART.md) needs no credentials.
 
-- **Model not found**: Run `ollama pull <model>` first.
-- **Connection refused**: Ensure Ollama is running (`ollama serve`).
-- **No tool calls**: Use a model that supports tool calling (Qwen 3, Llama 3.2+).
-- **Slow first request**: Model loading into memory takes time on first call.
+## Constructor reference
 
-## Source
+| Parameter | Annotation | Source default |
+| --- | --- | --- |
+| `model` | `str` | `'qwen3'` |
+| `host` | `str \| None` | `None` |
+| `api_key` | `str \| None` | `None` |
+| `options` | `dict[str, Any] \| None` | `None` |
+| `format` | `dict[str, Any] \| str \| None` | `None` |
+| `keep_alive` | `float \| str \| None` | `None` |
+| `think` | `bool \| None` | `None` |
+| `client` | `Any \| None` | `None` |
 
-`src/mtp/providers/ollama_provider.py`
+## Inspect capabilities
+
+```python
+print(provider.capabilities())
+```
+
+Capabilities describe the adapter's tools, streaming, media, structured output, and async behavior. The selected model and account can impose further restrictions. See the [provider contract](../PROVIDERS.md).
+
+The adapter declares the following contract in this source release:
+
+```python
+def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            provider="ollama",
+            supports_tool_calling=True,
+            supports_parallel_tool_calls=True,
+            input_modalities=["text", "image"],
+            supports_tool_media_output=True,
+            supports_finalize_streaming=True,
+            usage_metrics_quality=USAGE_METRICS_RICH,
+            supports_reasoning_metadata=bool(self.think),
+            structured_output_support=STRUCTURED_OUTPUT_CLIENT_VALIDATED,
+            supports_native_async=False,
+            allow_finalize_stream_fallback=True,
+        )
+```
+
+## Source and related guides
+
+- [Adapter source](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/providers/ollama_provider.py).
+- [Provider setup and model selection](../TUI_OPERATING_GUIDE.md).
+- [Runtime events](../EVENTS.md).
+- [Agent API](../AGENT_API.md).

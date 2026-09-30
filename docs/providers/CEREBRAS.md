@@ -1,131 +1,75 @@
-# Cerebras Provider
+# Cerebras provider
 
-Cerebras runs Llama models on wafer-scale chips, delivering the fastest inference available (~2000 tokens/sec).
+`Cerebras` is the public alias for `CerebrasToolCallingProvider`. This guide derives its constructor from MTPX 0.1.37.
 
-## Install
-
-```bash
-pip install "mtpx[cerebras]"
-```
-
-This installs the `openai` SDK (used for the OpenAI-compatible API). Alternatively, install the native Cerebras SDK:
+## Install and configure
 
 ```bash
-pip install cerebras-cloud-sdk
+python -m pip install "mtpx[cerebras]"
+mtp doctor --provider cerebras
 ```
 
-## API Key Setup
+Set `CEREBRAS_API_KEY` in your process environment before constructing the provider. The SDK does not automatically load `.env`. To use a `.env` file, install `mtpx[dotenv]` and call `Agent.load_dotenv_if_available()` first.
 
-### Option 1: `.env` file (recommended)
+Constructor model defaults below come from this release's code. They are offline defaults, not a guarantee of current provider availability or account access. Enter an available model ID, or use `/model` in the terminal UI to discover models.
 
-1. Install dotenv support:
-   ```bash
-   pip install python-dotenv
-   ```
-   Or with the MTP extra:
-   ```bash
-   pip install "mtpx[dotenv]"
-   ```
-
-2. Create a `.env` file in your project root:
-   ```
-   CEREBRAS_API_KEY=csk-your_key_here
-   ```
-
-3. Load it in your code **before** creating the provider:
-   ```python
-   from mtp import Agent
-
-   Agent.load_dotenv_if_available()  # reads .env file
-   ```
-
-Get a free API key at [cloud.cerebras.ai](https://cloud.cerebras.ai) (no credit card required).
-
-### Option 2: System environment variable
-
-```bash
-# Linux/macOS
-export CEREBRAS_API_KEY="csk-..."
-
-# Windows PowerShell
-$env:CEREBRAS_API_KEY="csk-..."
-```
-
-## Quick Start
+## Create an agent
 
 ```python
 from mtp import Agent
 from mtp.providers import Cerebras
+from mtp.toolkits import CalculatorToolkit
 
-Agent.load_dotenv_if_available()  # loads CEREBRAS_API_KEY from .env
-
-provider = Cerebras(model="llama-4-scout-17b-16e-instruct")
 tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-reply = agent.run_loop("What is 25 * 4 + 10?")
-print(reply)
+tools.register_toolkit_loader("calculator", CalculatorToolkit())
+provider = Cerebras()
+agent = Agent.MTPAgent(provider=provider, tools=tools)
+print(agent.run("What is 25 * 4 + 10?", max_rounds=4))
 ```
 
-## Parameters
+This example makes a provider request. The [offline quickstart](../website/QUICKSTART.md) needs no credentials.
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `model` | `str` | `"llama-4-scout-17b-16e-instruct"` | Cerebras model ID |
-| `api_key` | `str \| None` | `None` | API key (falls back to `CEREBRAS_API_KEY` env var) |
-| `temperature` | `float` | `0.0` | Sampling temperature |
-| `tool_choice` | `str \| dict` | `"auto"` | Tool selection strategy |
-| `parallel_tool_calls` | `bool` | `True` | Allow parallel tool calls |
-| `client` | `Any \| None` | `None` | Pre-configured `Cerebras` client instance |
+## Constructor reference
 
-## Capabilities
+| Parameter | Annotation | Source default |
+| --- | --- | --- |
+| `model` | `str` | `'llama-4-scout-17b-16e-instruct'` |
+| `api_key` | `str \| None` | `None` |
+| `temperature` | `float` | `0.0` |
+| `tool_choice` | `str \| dict[str, Any]` | `'auto'` |
+| `parallel_tool_calls` | `bool` | `True` |
+| `client` | `Any \| None` | `None` |
 
-| Capability | Value |
-|---|---|
-| Tool calling | Yes |
-| Parallel tool calls | Yes (configurable) |
-| Input modalities | text |
-| Streaming | Fallback |
-| Usage metrics | Rich |
-| Reasoning metadata | No |
-| Native async | No (uses thread fallback) |
-
-## Recommended Models
-
-- `llama-4-scout-17b-16e-instruct` — Best tool calling (default)
-- `llama-3.3-70b` — Strong general purpose
-- `llama3.1-8b` — Fastest
-
-## Full Example
+## Inspect capabilities
 
 ```python
-from mtp import Agent
-from mtp.providers import Cerebras
-
-Agent.load_dotenv_if_available()
-
-provider = Cerebras(
-    model="llama-4-scout-17b-16e-instruct",
-    temperature=0.0,
-    parallel_tool_calls=True,
-)
-
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-reply = agent.run_loop(
-    "Calculate (25 * 4) + 10",
-    max_rounds=3,
-)
-print(reply)
+print(provider.capabilities())
 ```
 
-## Notes
+Capabilities describe the adapter's tools, streaming, media, structured output, and async behavior. The selected model and account can impose further restrictions. See the [provider contract](../PROVIDERS.md).
 
-- Cerebras uses the native `cerebras-cloud-sdk` when available, falls back to the OpenAI client pointed at Cerebras endpoint.
-- Text-only input (no image/audio/video support).
-- The `parallel_tool_calls` parameter is gracefully handled if the SDK version doesn't support it.
+The adapter declares the following contract in this source release:
 
-## Source
+```python
+def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            provider="cerebras",
+            supports_tool_calling=True,
+            supports_parallel_tool_calls=bool(self.parallel_tool_calls),
+            input_modalities=["text"],
+            supports_tool_media_output=False,
+            supports_finalize_streaming=False,
+            usage_metrics_quality=USAGE_METRICS_RICH,
+            supports_reasoning_metadata=False,
+            structured_output_support=STRUCTURED_OUTPUT_CLIENT_VALIDATED,
+            supports_native_async=False,
+            allow_finalize_stream_fallback=True,
+        )
+```
 
-`src/mtp/providers/cerebras_provider.py`
+## Source and related guides
+
+- [Adapter source](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/providers/cerebras_provider.py).
+- [Provider setup and model selection](../TUI_OPERATING_GUIDE.md).
+- [Runtime events](../EVENTS.md).
+- [Agent API](../AGENT_API.md).

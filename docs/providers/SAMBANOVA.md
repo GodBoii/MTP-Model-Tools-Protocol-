@@ -1,129 +1,74 @@
-# SambaNova Provider
+# SambaNova provider
 
-SambaNova Cloud provides ultra-fast inference for Llama models using their RDU hardware.
+`SambaNova` is the public alias for `SambaNovaToolCallingProvider`. This guide derives its constructor from MTPX 0.1.37.
 
-## Install
-
-```bash
-pip install "mtpx[sambanova]"
-```
-
-This installs the `openai` SDK (used for the OpenAI-compatible API):
+## Install and configure
 
 ```bash
-pip install openai
+python -m pip install "mtpx[sambanova]"
+mtp doctor --provider sambanova
 ```
 
-## API Key Setup
+Set `SAMBANOVA_API_KEY` in your process environment before constructing the provider. The SDK does not automatically load `.env`. To use a `.env` file, install `mtpx[dotenv]` and call `Agent.load_dotenv_if_available()` first.
 
-### Option 1: `.env` file (recommended)
+Constructor model defaults below come from this release's code. They are offline defaults, not a guarantee of current provider availability or account access. Enter an available model ID, or use `/model` in the terminal UI to discover models.
 
-1. Install dotenv support:
-   ```bash
-   pip install python-dotenv
-   ```
-   Or with the MTP extra:
-   ```bash
-   pip install "mtpx[dotenv]"
-   ```
-
-2. Create a `.env` file in your project root:
-   ```
-   SAMBANOVA_API_KEY=your_key_here
-   ```
-
-3. Load it in your code **before** creating the provider:
-   ```python
-   from mtp import Agent
-
-   Agent.load_dotenv_if_available()  # reads .env file
-   ```
-
-Get an API key at [cloud.sambanova.ai](https://cloud.sambanova.ai).
-
-### Option 2: System environment variable
-
-```bash
-# Linux/macOS
-export SAMBANOVA_API_KEY="..."
-
-# Windows PowerShell
-$env:SAMBANOVA_API_KEY="..."
-```
-
-## Quick Start
+## Create an agent
 
 ```python
 from mtp import Agent
 from mtp.providers import SambaNova
+from mtp.toolkits import CalculatorToolkit
 
-Agent.load_dotenv_if_available()  # loads SAMBANOVA_API_KEY from .env
-
-provider = SambaNova(model="Meta-Llama-3.1-70B-Instruct")
 tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-reply = agent.run_loop("What is 25 * 4 + 10?")
-print(reply)
+tools.register_toolkit_loader("calculator", CalculatorToolkit())
+provider = SambaNova()
+agent = Agent.MTPAgent(provider=provider, tools=tools)
+print(agent.run("What is 25 * 4 + 10?", max_rounds=4))
 ```
 
-## Parameters
+This example makes a provider request. The [offline quickstart](../website/QUICKSTART.md) needs no credentials.
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `model` | `str` | `"Meta-Llama-3.1-70B-Instruct"` | SambaNova model ID |
-| `api_key` | `str \| None` | `None` | API key (falls back to `SAMBANOVA_API_KEY` env var) |
-| `temperature` | `float` | `0.0` | Sampling temperature |
-| `tool_choice` | `str \| dict` | `"auto"` | Tool selection strategy |
-| `client` | `Any \| None` | `None` | Pre-configured `openai.OpenAI` client instance |
+## Constructor reference
 
-## Capabilities
+| Parameter | Annotation | Source default |
+| --- | --- | --- |
+| `model` | `str` | `'Meta-Llama-3.1-70B-Instruct'` |
+| `api_key` | `str \| None` | `None` |
+| `temperature` | `float` | `0.0` |
+| `tool_choice` | `str \| dict[str, Any]` | `'auto'` |
+| `client` | `Any \| None` | `None` |
 
-| Capability | Value |
-|---|---|
-| Tool calling | Yes (model-dependent) |
-| Parallel tool calls | No |
-| Input modalities | text, image, audio, file |
-| Streaming | Fallback |
-| Usage metrics | Rich |
-| Reasoning metadata | No |
-| Native async | No (uses thread fallback) |
-
-## Recommended Models
-
-- `Meta-Llama-3.1-70B-Instruct` — Best tool calling (default)
-- `Meta-Llama-3.1-8B-Instruct` — Fastest
-- `Meta-Llama-3.1-405B-Instruct` — Most capable
-
-## Full Example
+## Inspect capabilities
 
 ```python
-from mtp import Agent
-from mtp.providers import SambaNova
-
-Agent.load_dotenv_if_available()
-
-provider = SambaNova(
-    model="Meta-Llama-3.1-70B-Instruct",
-    temperature=0.0,
-)
-
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-reply = agent.run_loop(
-    "Calculate (25 * 4) + 10",
-    max_rounds=3,
-)
-print(reply)
+print(provider.capabilities())
 ```
 
-## Notes
+Capabilities describe the adapter's tools, streaming, media, structured output, and async behavior. The selected model and account can impose further restrictions. See the [provider contract](../PROVIDERS.md).
 
-- SambaNova uses the OpenAI-compatible API at `https://api.sambanova.ai/v1`.
-- Model names may change by account/endpoint. Confirm your available model ID before use.
-- Tool calling support depends on the model. Llama 3.1 Instruct models support it.
+The adapter declares the following contract in this source release:
 
-## Source
+```python
+def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            provider="sambanova",
+            supports_tool_calling=True,
+            supports_parallel_tool_calls=False,
+            input_modalities=["text", "image", "audio", "file"],
+            supports_tool_media_output=True,
+            supports_finalize_streaming=False,
+            usage_metrics_quality=USAGE_METRICS_RICH,
+            supports_reasoning_metadata=False,
+            structured_output_support=STRUCTURED_OUTPUT_CLIENT_VALIDATED,
+            supports_native_async=False,
+            allow_finalize_stream_fallback=True,
+        )
+```
 
-`src/mtp/providers/sambanova_provider.py`
+## Source and related guides
+
+- [Adapter source](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/providers/sambanova_provider.py).
+- [Provider setup and model selection](../TUI_OPERATING_GUIDE.md).
+- [Runtime events](../EVENTS.md).
+- [Agent API](../AGENT_API.md).

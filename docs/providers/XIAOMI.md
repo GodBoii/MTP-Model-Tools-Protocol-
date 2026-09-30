@@ -1,175 +1,79 @@
-# Xiaomi MiMo Provider
+# Xiaomi provider
 
-Xiaomi MiMo provides an OpenAI-compatible API with built-in thinking/reasoning support. Features adaptive thinking mode management.
+`Xiaomi` is the public alias for `XiaomiToolCallingProvider`. This guide derives its constructor from MTPX 0.1.37.
 
-## Install
-
-```bash
-pip install "mtpx[xiaomi]"
-```
-
-This installs the `openai` SDK:
+## Install and configure
 
 ```bash
-pip install openai
+python -m pip install "mtpx[xiaomi]"
+mtp doctor --provider xiaomi
 ```
 
-## API Key Setup
+Set `MIMO_API_KEY` in your process environment before constructing the provider. The SDK does not automatically load `.env`. To use a `.env` file, install `mtpx[dotenv]` and call `Agent.load_dotenv_if_available()` first.
 
-### Option 1: `.env` file (recommended)
+Constructor model defaults below come from this release's code. They are offline defaults, not a guarantee of current provider availability or account access. Enter an available model ID, or use `/model` in the terminal UI to discover models.
 
-1. Install dotenv support:
-   ```bash
-   pip install python-dotenv
-   ```
-   Or with the MTP extra:
-   ```bash
-   pip install "mtpx[dotenv]"
-   ```
-
-2. Create a `.env` file in your project root:
-   ```
-   MIMO_API_KEY=your_key_here
-   ```
-
-3. Load it in your code **before** creating the provider:
-   ```python
-   from mtp import Agent
-
-   Agent.load_dotenv_if_available()  # reads .env file
-   ```
-
-### Option 2: System environment variable
-
-```bash
-# Linux/macOS
-export MIMO_API_KEY="..."
-
-# Windows PowerShell
-$env:MIMO_API_KEY="..."
-```
-
-## Quick Start
+## Create an agent
 
 ```python
 from mtp import Agent
 from mtp.providers import Xiaomi
-
-Agent.load_dotenv_if_available()  # loads MIMO_API_KEY from .env
-
-provider = Xiaomi(model="mimo-v2.5-pro")
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-reply = agent.run_loop("What is 25 * 4 + 10?")
-print(reply)
-```
-
-## Parameters
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `model` | `str` | `"mimo-v2.5-pro"` | MiMo model ID |
-| `api_key` | `str \| None` | `None` | API key (falls back to `MIMO_API_KEY` env var) |
-| `base_url` | `str \| None` | `None` | API endpoint URL; falls back to `MIMO_BASE_URL`, then the Xiaomi Token Plan endpoint |
-| `temperature` | `float` | `0.0` | Sampling temperature |
-| `tool_choice` | `str \| dict` | `"auto"` | Tool selection strategy |
-| `parallel_tool_calls` | `bool` | `True` | Allow parallel tool calls |
-| `thinking_mode` | `str` | `"adaptive"` | Thinking mode for planning: `"adaptive"`, `"enabled"`, `"disabled"` |
-| `final_thinking_mode` | `str \| None` | `"enabled"` | Thinking mode for finalization: `"adaptive"`, `"enabled"`, `"disabled"`, or `None` |
-| `timeout_seconds` | `float` | `60.0` | Request timeout passed to the OpenAI-compatible client |
-| `client` | `Any \| None` | `None` | Pre-configured `openai.OpenAI` client instance |
-
-## Capabilities
-
-| Capability | Value |
-|---|---|
-| Tool calling | Yes |
-| Parallel tool calls | Yes (configurable) |
-| Input modalities | text, image, audio, file |
-| Streaming | Yes (both `stream_next_action` and `finalize_stream`) |
-| Usage metrics | Rich |
-| Reasoning metadata | Yes |
-| Native async | No (uses thread fallback) |
-
-## Thinking Modes
-
-Xiaomi MiMo has adaptive thinking that automatically manages when reasoning is active:
-
-- **`"adaptive"`** (default): Thinking is enabled for initial planning, disabled after tool rounds. Finalization uses `final_thinking_mode`.
-- **`"enabled"`**: Thinking is always on.
-- **`"disabled"`**: Thinking is always off.
-
-```python
-# Adaptive thinking (recommended)
-provider = Xiaomi(
-    model="mimo-v2.5-pro",
-    thinking_mode="adaptive",
-    final_thinking_mode="enabled",
-)
-
-# Always thinking
-provider = Xiaomi(
-    model="mimo-v2.5-pro",
-    thinking_mode="enabled",
-)
-
-# No thinking
-provider = Xiaomi(
-    model="mimo-v2.5-pro",
-    thinking_mode="disabled",
-)
-```
-
-## Streaming
-
-Xiaomi supports both planning and finalization streaming with reasoning chunks:
-
-```python
-for event in agent.run_loop_events(
-    "Calculate 25 * 4",
-    max_rounds=2,
-    stream_final=True,
-):
-    if isinstance(event, dict):
-        if event.get("type") == "reasoning_chunk":
-            print("[thinking]", event["chunk"])
-        elif event.get("type") == "text_chunk":
-            print(event["chunk"], end="", flush=True)
-```
-
-## Full Example
-
-```python
-from mtp import Agent
-from mtp.providers import Xiaomi
-
-Agent.load_dotenv_if_available()
-
-provider = Xiaomi(
-    model="mimo-v2.5-pro",
-    temperature=0.0,
-    thinking_mode="adaptive",
-    final_thinking_mode="enabled",
-)
+from mtp.toolkits import CalculatorToolkit
 
 tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-reply = agent.run_loop(
-    "Calculate (25 * 4) + 10",
-    max_rounds=3,
-)
-print(reply)
+tools.register_toolkit_loader("calculator", CalculatorToolkit())
+provider = Xiaomi()
+agent = Agent.MTPAgent(provider=provider, tools=tools)
+print(agent.run("What is 25 * 4 + 10?", max_rounds=4))
 ```
 
-## Notes
+This example makes a provider request. The [offline quickstart](../website/QUICKSTART.md) needs no credentials.
 
-- Uses OpenAI-compatible API at `https://token-plan-ams.xiaomimimo.com/v1`.
-- Thinking/reasoning content is captured from `reasoning_content` field on response messages.
-- The adapter automatically disables thinking after tool rounds when in adaptive mode to save tokens.
-- Supports `extra_body` parameter for passing thinking configuration to the API.
+## Constructor reference
 
-## Source
+| Parameter | Annotation | Source default |
+| --- | --- | --- |
+| `model` | `str` | `'mimo-v2.5-pro'` |
+| `api_key` | `str \| None` | `None` |
+| `base_url` | `str \| None` | `None` |
+| `temperature` | `float` | `0.0` |
+| `tool_choice` | `str \| dict[str, Any]` | `'auto'` |
+| `parallel_tool_calls` | `bool` | `True` |
+| `thinking_mode` | `str` | `'adaptive'` |
+| `final_thinking_mode` | `str \| None` | `'enabled'` |
+| `timeout_seconds` | `float` | `60.0` |
+| `client` | `Any \| None` | `None` |
 
-`src/mtp/providers/xiaomi_provider.py`
+## Inspect capabilities
+
+```python
+print(provider.capabilities())
+```
+
+Capabilities describe the adapter's tools, streaming, media, structured output, and async behavior. The selected model and account can impose further restrictions. See the [provider contract](../PROVIDERS.md).
+
+The adapter declares the following contract in this source release:
+
+```python
+def capabilities(self) -> ProviderCapabilities:
+        return ProviderCapabilities(
+            provider="xiaomi",
+            supports_tool_calling=True,
+            supports_parallel_tool_calls=bool(self.parallel_tool_calls),
+            input_modalities=["text", "image", "audio", "file"],
+            supports_tool_media_output=True,
+            supports_finalize_streaming=True,
+            usage_metrics_quality=USAGE_METRICS_RICH,
+            supports_reasoning_metadata=True,
+            structured_output_support=STRUCTURED_OUTPUT_CLIENT_VALIDATED,
+            supports_native_async=False,
+            allow_finalize_stream_fallback=True,
+        )
+```
+
+## Source and related guides
+
+- [Adapter source](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/providers/xiaomi_provider.py).
+- [Provider setup and model selection](../TUI_OPERATING_GUIDE.md).
+- [Runtime events](../EVENTS.md).
+- [Agent API](../AGENT_API.md).

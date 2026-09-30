@@ -11,7 +11,7 @@ from mtp import Agent
 from mtp.providers import Groq
 
 tools = Agent.ToolRegistry()
-provider = Groq(model="llama-3.3-70b-versatile")
+provider = Groq(model="openai/gpt-oss-120b")
 agent = Agent.MTPAgent(provider=provider, tools=tools)
 ```
 
