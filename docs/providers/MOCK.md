@@ -1,91 +1,35 @@
-# Mock / Simple Planner Provider
+# Mock planner provider
 
-A tiny deterministic planner for local demos and testing. Not a real LLM — returns hardcoded plans and responses.
+`MockPlannerProvider` is an alias for a small deterministic planner. It needs no provider SDK or API key.
 
-## Install
-
-No additional packages required. Part of the MTP core.
-
-## Quick Start
+## Run a text-only fixture
 
 ```python
 from mtp import Agent
 from mtp.providers import MockPlannerProvider
 
-provider = MockPlannerProvider()
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools)
-
-# Triggers a deterministic tool plan when "profile" is in the prompt
-reply = agent.run_loop("Get my profile")
-print(reply)
-
-# Returns a direct text response for other prompts
-reply = agent.run_loop("Hello")
-print(reply)
+agent = Agent.MTPAgent(
+    provider=MockPlannerProvider(), tools=Agent.ToolRegistry()
+)
+print(agent.run("Hello"))
 ```
 
-## Behavior
+The reply is `Planner has no tool plan for this prompt yet.` This provider follows fixed rules; it does not answer general questions or calculate arbitrary expressions.
 
-The mock provider follows these rules:
+## Tool-plan fixture
 
-- If the user message contains `"profile"`: executes `github.get_user` then `github.create_issue` (sequential batch with `$ref` dependency).
-- Otherwise: returns `"Planner has no tool plan for this prompt yet."`
+A prompt containing `profile` requests `github.get_user` followed by `github.create_issue`, with a dependency and a result reference. Those names are demo contracts. Register both handlers before using that prompt. The built-in planner itself does not connect to GitHub.
 
-## Parameters
-
-None. The provider takes no constructor arguments.
+For a complete offline example that registers and executes its own tool, use the [quickstart](../website/QUICKSTART.md) and [download offline_agent.py](/downloads/offline_agent.py).
 
 ## Capabilities
 
-| Capability | Value |
-|---|---|
-| Tool calling | Yes (deterministic) |
-| Parallel tool calls | No |
-| Input modalities | text |
-| Streaming | No |
-| Usage metrics | None |
-| Reasoning metadata | No |
-| Structured output | None |
-| Native async | No |
+The planner supports deterministic sequential tool plans and text input. It declares no native finalize streaming, usage metrics, reasoning metadata, structured output, or native async client. The runtime can use its declared finalize fallback.
 
-## Use Cases
-
-- Unit tests and integration tests
-- Deterministic demos of the MTP execution pipeline
-- Debugging tool execution flow without an LLM
-- Example scripts that run without API keys
-
-## Aliases
+## Import the underlying class
 
 ```python
-from mtp.providers import MockPlannerProvider
-from mtp.providers import SimplePlannerProvider
-
-# Both are the same class
-assert MockPlannerProvider is SimplePlannerProvider
+from mtp.providers.simple_planner import SimplePlannerProvider
 ```
 
-## Full Example
-
-```python
-from mtp import Agent
-from mtp.providers import MockPlannerProvider
-
-provider = MockPlannerProvider()
-tools = Agent.ToolRegistry()
-agent = Agent(provider=provider, tools=tools, debug_mode=True)
-
-# This triggers the deterministic plan
-reply = agent.run_loop("Get my profile", max_rounds=2)
-print(reply)
-
-# This returns a text response
-reply = agent.run_loop("Hello world")
-print(reply)
-```
-
-## Source
-
-`src/mtp/providers/simple_planner.py` (implementation)
-`src/mtp/providers/mock.py` (alias)
+The public package alias is `MockPlannerProvider`. The underlying class lives in `simple_planner.py`.

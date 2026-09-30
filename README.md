@@ -1,195 +1,113 @@
-# MTPX Documentation Frontend
+# MTPX documentation website
 
-Motion-led documentation website for MTPX, a multi-tool protocol runtime and SDK for inspectable agent systems.
+Documentation and recorded demos for MTPX 0.1.37, the Model Tool Protocol Python SDK and CLI. The site has 50 documentation chapters, four videos, nine product screenshots, searchable guides, copyable code, and source links.
 
-The site is built as an editorial documentation experience rather than a generic docs template. The homepage introduces the `mtpx` identity, the docs index uses a large typographic row system with hover previews, and each documentation chapter opens into a detailed page with explanation, use cases, implementation notes, and code examples.
+## Run locally
 
-## What This Site Contains
-
-- A cinematic landing page for MTPX.
-- A documentation index at `/docs`.
-- Dynamic documentation pages at `/docs/[slug]`.
-- 50+ generated documentation routes covering planning, DAG execution, runtime, tool registry, sessions, providers, safety, observability, SDK APIs, and examples.
-- A support/contact page focused on MTPX integration, debugging, providers, sessions, event streams, and MCP bridges.
-- Redirects from old portfolio routes (`/work`, `/work/[slug]`, `/studio`) to `/docs`.
-- Smooth scrolling, route transitions, text reveals, hover previews, and interactive WebGL-like visual panels.
-
-## Tech Stack
-
-- Next.js 14 App Router
-- React 18
-- TypeScript
-- GSAP for motion and route/page reveal choreography
-- Lenis for smooth scrolling
-- Three.js for kinetic canvas visuals
-- CSS Modules-style global editorial CSS in `app/globals.css`
-- Lucide React icons
-
-## Project Structure
-
-```text
-mtp-frontend/
-  app/
-    page.tsx              # landing page
-    docs/page.tsx         # docs index
-    docs/[slug]/page.tsx  # dynamic docs detail pages
-    contact/page.tsx      # MTPX contact/support form
-    work/                 # redirects to docs
-    studio/               # redirects to docs
-    globals.css           # visual system, layout, responsive rules
-    layout.tsx            # app shell
-  components/
-    DocsRows.tsx          # docs row index with hover preview
-    Providers.tsx         # Lenis, loader, GSAP route transition
-    Visual.tsx            # kinetic Three.js visual panel
-    Header.tsx
-    Footer.tsx
-    ContactForm.tsx
-    TextReveal.tsx
-  content/
-    docs.ts               # documentation chapters and page content
-    site.ts               # nav, install command, contact options
-    projects.ts           # legacy project data retained for old case-study components
-  lib/
-    motion.ts             # shared motion helpers
-  output/playwright/      # verification screenshots
-```
-
-## Routes
-
-| Route | Purpose |
-| --- | --- |
-| `/` | Landing page with `mtpx` hero and selected docs rows |
-| `/docs` | Complete documentation index |
-| `/docs/introduction` | Introduction chapter |
-| `/docs/quickstart` | Quickstart chapter |
-| `/docs/installation` | Installation chapter |
-| `/docs/provider-groq` | Provider-specific docs example |
-| `/docs/example-research` | Example use-case chapter |
-| `/contact` | MTPX support/integration form |
-| `/work`, `/studio` | Redirect to `/docs` |
-
-The full documentation route list is defined in `content/docs.ts`.
-
-## Getting Started
-
-Install dependencies:
+Use Node.js 22 or later. Install the locked dependency set, then start Next.js:
 
 ```bash
-npm install
-```
-
-Run the development server:
-
-```bash
+npm ci
 npm run dev
 ```
 
-Open:
-
-```text
-http://localhost:3000
-```
-
-If port `3000` is already in use, run another port:
-
-```bash
-npm run dev -- --port 3002
-```
-
-## Production Build
-
-Create an optimized production build:
+For a production preview:
 
 ```bash
 npm run build
-```
-
-Start the production server after building:
-
-```bash
 npm run start
 ```
 
-## Useful Commands
+The application uses Next.js 16, React 18, TypeScript, react-markdown, remark-gfm, and rehype-slug. GSAP and Lenis retain the existing page transitions. Reduced-motion users get direct navigation and static presentation.
+
+## Routes and content
+
+| Route | Contents |
+| --- | --- |
+| `/` | CLI demos, terminal screenshots, runtime flow, and selected guides |
+| `/docs` | Search and section filters for all 50 chapters |
+| `/docs/quickstart` | Install, offline example, scaffolding, and a first cloud agent |
+| `/docs/tui-operating-guide` | Provider setup, models, keyboard controls, queues, and sessions |
+| `/docs/codebase-memory` | Local indexing and search |
+| `/docs/agent-os` | Optional Streamlit browser interface |
+| `/docs/tool-policy` | Risk decisions and registry approval callbacks |
+| `/docs/sdk-recipes` | Async calls, structured output, cancellation, and continuation |
+| `/docs/release-notes` | Changes in releases 0.1.35 through 0.1.37 |
+| `/docs/provider-*` | Provider constructor and capability references |
+
+The complete registry is `content/docs.ts`. Unknown chapter slugs return 404. The old generic introductions and synthetic provider examples have been removed.
+
+## Update the manuals
+
+The authoritative MTP source checkout is separate from this website. Sync from its local path:
 
 ```bash
-npm run dev      # start local dev server
-npm run build    # type-check and create production build
-npm run start    # serve production build
-npm run lint     # run Next.js lint command
+npm run docs:sync -- ../MTP
 ```
 
-## Editing Documentation Content
+This reads 45 source manuals and stores the package version, source commit, and original file hashes in `content/docs-source.json`. It converts local-machine source links to GitHub links and updates Groq examples to the source release's default model. It then calls `scripts/refresh-provider-docs.py` to derive 15 provider guides from actual constructor signatures and capability methods. Python is required for this step, but provider SDKs and API keys are not.
 
-Most documentation content lives in:
+Generated provider-reference provenance lives in `content/provider-reference-source.json`. Website-specific guides live in `docs/website/`, which syncing does not overwrite. After a package release, review the website-specific release notes and screenshots as well as syncing the source manuals.
 
-```text
-content/docs.ts
-```
+Model defaults describe this source snapshot. They do not guarantee current account access. The TUI's model catalog and custom-ID field remain the way to choose a model available to an account.
 
-Key exports:
+## Recreate the demos
 
-- `docChapters`: primary source for `/docs` index rows and `/docs/[slug]` pages.
-- `getDocChapter(slug)`: resolves a chapter by slug.
-- `getNextDocChapter(slug)`: powers the next-doc link on detail pages.
+The committed media came from local commands and Textual's real `run_test` screen exports. The videos record replays of those outputs and UI states at a readable pace. They are silent and include WebVTT captions. No cloud inference, user credentials, or existing chat history was captured.
 
-Each chapter includes:
-
-- `slug`
-- `title`
-- `group`
-- `track`
-- `summary`
-- `useCase`
-- `explanation`
-- `bullets`
-- `code`
-- `palette`
-
-To add a new docs page, add an entry to `rawDocChapters` in `content/docs.ts`. The dynamic route will be generated automatically.
-
-## Motion And Interaction Notes
-
-- `components/Providers.tsx` owns the loader, smooth scrolling, page reveal, and route transition curtain.
-- `components/DocsRows.tsx` owns the row hover behavior and floating docs preview.
-- `components/Visual.tsx` renders the animated canvas-backed visual panels.
-- `components/TextReveal.tsx` wraps words for GSAP reveal animations.
-
-Reduced motion is handled in CSS with `prefers-reduced-motion`.
-
-## Design Direction
-
-The site intentionally uses:
-
-- Oversized typography.
-- Sparse neutral shell colors.
-- Red accent states.
-- Typographic list navigation.
-- Hover previews instead of card grids.
-- Editorial page rhythm.
-- Motion as interface feedback rather than decoration only.
-
-The primary package command shown in the shell is:
+1. Install the matching MTP source into a Python environment with Textual.
+2. Use an installed Chrome browser. Playwright and Sharp are included as development dependencies.
+3. Install Playwright's video encoder if it is absent.
+4. Capture and render:
 
 ```bash
-pip install mtpx
+python -m pip install -e ../MTP
+npx playwright install ffmpeg
+npm run demos:capture
+npm run demos:render
 ```
 
-## Verification
+The Python script uses a temporary project and session store. It removes provider API-key variables from the capture process, scaffolds an agent, runs the downloadable offline example, indexes the demo workspace, and captures six terminal states. It checks the installed MTP version against the website's snapshot before capturing.
 
-The current implementation has been checked with:
+`public/media/cli-transcripts.json` contains the captured stdout, with only the temporary machine path replaced. `public/media/provenance.json` records the source revision and method. `public/downloads/offline_agent.py` is the executable offline example linked from the quickstart. It uses a deterministic provider and a real runtime tool call.
+
+## Verify a change
 
 ```bash
+npm run lint
+npm run typecheck
 npm run build
 ```
 
-Screenshots from browser verification are stored in:
+Start the production server in another terminal, then run browser checks:
 
-```text
-output/playwright/
+```bash
+npm run start
+npm run verify:browser
 ```
 
-## Notes
+By default, browser verification uses `http://localhost:3000`. Pass the URL of your running server explicitly when it uses another port:
 
-This frontend is documentation-focused. Older portfolio/studio routes are intentionally redirected to `/docs` so the website does not expose unrelated agency or portfolio context.
+```bash
+npm run verify:browser -- http://localhost:3100
+```
+
+The browser script checks every documentation route and table-of-contents anchor, search, filters, empty results, reset, clipboard copying, modal focus and Escape behavior, playback and captions, image loading, desktop/tablet/mobile overflow, and normal-motion route navigation. It writes screenshots and a report to ignored `output/verification/`.
+
+## Project layout
+
+```text
+app/                      Next.js routes, metadata, and global CSS
+components/               Search, media, code copying, navigation, and motion
+content/docs.ts           Chapter registry and topic summaries
+content/docs-source.json  Source version, revision, and hashes
+content/demos.ts          Demo descriptions and output summaries
+docs/                     Synced and derived manuals
+docs/website/             Website-specific guides
+lib/docsMarkdown.ts       File loading, anchors, and source-link resolution
+public/media/             Videos, captions, screenshots, and provenance
+public/downloads/         Runnable offline agent
+scripts/                  Sync, reference generation, capture, render, verification
+```
+
+Source snapshots can contain historical implementation notes, changelogs, and plans. The current operating guide, source-derived provider references, and website-specific guides describe the current workflows. Cloud inference was not part of the offline verification.

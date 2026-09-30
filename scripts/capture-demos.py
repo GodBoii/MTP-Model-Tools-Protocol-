@@ -55,6 +55,10 @@ async def capture_tui(workspace: Path) -> None:
 
 
 def main() -> None:
+    import mtp
+    expected = json.loads((ROOT / "content/docs-source.json").read_text(encoding="utf-8"))["version"]
+    if mtp.__version__ != expected:
+        raise RuntimeError(f"Capture requires MTPX {expected}; imported {mtp.__version__} from {mtp.__file__}")
     OUTPUT.mkdir(parents=True, exist_ok=True)
     # Provider keys are intentionally absent. Never load a user's .env or sessions.
     for name in list(os.environ):

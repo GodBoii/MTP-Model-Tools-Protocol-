@@ -8,3 +8,7 @@ yarn-error.log*
 *.log
 tsconfig.tsbuildinfo
 .playwright-cli/
+output/verification/
+output/home-*.png
+output/docs-*.png
+public/media/raw/
