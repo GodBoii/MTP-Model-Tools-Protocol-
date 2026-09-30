@@ -1,0 +1,187 @@
+{
+  "version": "0.1.37",
+  "revision": "72ffb74440f1620fdd71dd097198380fe12433fc",
+  "repository": "https://github.com/GodBoii/Model-Tool-protocol-",
+  "files": [
+    {
+      "path": "docs/AGENT_API.md",
+      "sha256": "83e60fc73f40edefb6a47ef1f612f0a745361db977e4aa9c72262243df03c88f"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "sha256": "ab863f3997e204d45979e4159453b57093a7ea00b433e1090975944e83580824"
+    },
+    {
+      "path": "docs/CLI.md",
+      "sha256": "2c4b3b0fc0062fb6d138470cbc418a283f0cfd1c171cdc8fa60c5f409b873135"
+    },
+    {
+      "path": "docs/CREATING_TOOLS.md",
+      "sha256": "82a7dc9cc0d7ee520f19d00c6b88dd6deed9e2384d07a01ffef1ec9fcbac80fb"
+    },
+    {
+      "path": "docs/EVENTS.md",
+      "sha256": "b79037e0412ba6e73a932f753472b906112c3490f36e81e791be824b8e7c4bda"
+    },
+    {
+      "path": "docs/GROQ_INTEGRATION.md",
+      "sha256": "ff01101cfb69d07aee185285f5c3f11c438769d6d74bef842b55bdb0af95aa97"
+    },
+    {
+      "path": "docs/IMPLEMENTATION_NOTES.md",
+      "sha256": "a30b1cdc17bd07448371d46b32778e04cf1b2fc7f72f5e09e83c91f5a261a9fc"
+    },
+    {
+      "path": "docs/LOCAL_INFERENCE.md",
+      "sha256": "eb97e2d4aa8fddde649c7d1445673a6e284c71ffd246095d476dd57c4ed6d540"
+    },
+    {
+      "path": "docs/LOCAL_TOOLKITS.md",
+      "sha256": "b7a66c2ea8cd38d7d97bf046e4294274c0118b6545dc81491e6b5321b40cf425"
+    },
+    {
+      "path": "docs/MCP_COMPATIBILITY_MATRIX.md",
+      "sha256": "da7cb69952d83fda08a3f2377bb711996ed14787e82dacf0e62eaa023690a101"
+    },
+    {
+      "path": "docs/MCP_INTEROP.md",
+      "sha256": "c7317598d745b0de7459c1beb93d2f26b66861665e6c06888a0d5b35ffdf4c23"
+    },
+    {
+      "path": "docs/PROJECT_DIRECTION.md",
+      "sha256": "112e5bad91e55d8eaa265232289a29265d8f4a321c52cbcc7d8107ae14ce4cf7"
+    },
+    {
+      "path": "docs/PROTOCOL_SPEC.md",
+      "sha256": "ca6d683fbb67d74f640133bbb19ce6fcc8e49ef12186b8b7fea64a7b7b2a22b1"
+    },
+    {
+      "path": "docs/PROVIDERS.md",
+      "sha256": "a7dfb8cdc20af4df668002bf7d2d09b34fdb64904f2bff2ea3d2ec0d3521473e"
+    },
+    {
+      "path": "docs/PROVIDER_GUIDES.md",
+      "sha256": "154afe2a1e891b0200066e820c58e9e26d808bc26e1b1c3571c10307232603ce"
+    },
+    {
+      "path": "docs/PUBLISHING.md",
+      "sha256": "97df96cc823cf84b5f974676f30b92afe9768bf583306558f070f33b75c047c2"
+    },
+    {
+      "path": "docs/QUICKSTART.md",
+      "sha256": "e129c3ae5edea6c0ccbf08f2d2c85c183742a314db78ce79b07846ab51e0ef3e"
+    },
+    {
+      "path": "docs/ROADMAP.md",
+      "sha256": "d6c206e979e7d7eebdccc5a3fd6ad5088ac293e8b1ebd86f128ceed14c18883e"
+    },
+    {
+      "path": "docs/STORAGE.md",
+      "sha256": "8763df6e0e8469675722a502eb579dbac862cb13d7a8e90fc2f75073e0db2d2b"
+    },
+    {
+      "path": "docs/TESTING.md",
+      "sha256": "f1bb5c075b7b42f5e351bf49413cb9401e3f09e6a6e99ef6919d21327851dda6"
+    },
+    {
+      "path": "docs/TOOL_CALL_SYNTAX.md",
+      "sha256": "20285e4975c8041010fec045137678580b01b2128a633e9b81c8bf4d63ae8543"
+    },
+    {
+      "path": "docs/TRANSPORT.md",
+      "sha256": "4f3c837104b3ef3b3190c1e024a82a6347a61768b9523949bbb8f1622b2ccbff"
+    },
+    {
+      "path": "docs/TUI_CHANGELOG.md",
+      "sha256": "5ced07b9e6f89765e7e07a751d6d6803eac761b12a49c84268674b0a775ac713"
+    },
+    {
+      "path": "docs/TUI_LOCAL_INFERENCE.md",
+      "sha256": "ebe0a639b4657d34b5ab61180a7c8d3ca2e8bc5e282680e00b3eb3edffbb35cb"
+    },
+    {
+      "path": "docs/TUI_OPERATING_GUIDE.md",
+      "sha256": "92102f8e5c15e29de9b2e964ce826ef8a0366020253dae385f8e088d0c72f969"
+    },
+    {
+      "path": "docs/TUI_UX_AUDIT.md",
+      "sha256": "6aefc03779d6baeda585c4791645af506bfd4552a13d509f8bb1e210addbc505"
+    },
+    {
+      "path": "docs/TUI_UX_VERIFICATION.md",
+      "sha256": "78c99203e9e8497e651b1d18e8379d56ae9b8dcb8df7a90f175b7fee2133ef45"
+    },
+    {
+      "path": "docs/XIAOMI_MIMO_INTEGRATION.md",
+      "sha256": "eb1bc8233b26daffae5d1c336c0bda5a2357ffd6a4213bd9833d8cd6ee8ac4d0"
+    },
+    {
+      "path": "docs/providers/ANTHROPIC.md",
+      "sha256": "3b286fd624cb21796628abed6b9947a8637348e30ebef6198a1292837790f021"
+    },
+    {
+      "path": "docs/providers/CEREBRAS.md",
+      "sha256": "396b48c69c884c147400ddd593a676a620cacc5c596bbdb1341e7b93d9f9ddb9"
+    },
+    {
+      "path": "docs/providers/COHERE.md",
+      "sha256": "d9cc1d3e330a9ff450c5cfa73bb42396fbe92b4e94ba7f2bdaa80aedf4d69a11"
+    },
+    {
+      "path": "docs/providers/DEEPSEEK.md",
+      "sha256": "88661eb7f8bd013f4e5232e85ad8e7a28ce4fc7aaed48452eda314f9bd972c63"
+    },
+    {
+      "path": "docs/providers/FIREWORKS.md",
+      "sha256": "5cf2e63997a80cd7a126339e4736b4a5b86c855fe6af086a1d783516fff80c76"
+    },
+    {
+      "path": "docs/providers/GEMINI.md",
+      "sha256": "fa651524f8eb0225c14d30f971e309085e55ef9adb1244e43e9461871ed62b0a"
+    },
+    {
+      "path": "docs/providers/GROQ.md",
+      "sha256": "07744ac086bf1205dcddde75a31cdeebf3e98f7c9c87051ebcc1289570d6c55c"
+    },
+    {
+      "path": "docs/providers/LMSTUDIO.md",
+      "sha256": "448f426b1b7aca028c15441094902d60a4f85a75b4132b49fe1a92313066c1fb"
+    },
+    {
+      "path": "docs/providers/MISTRAL.md",
+      "sha256": "9414dd3f071fbae59aa5a5774bedddf0ffdbe2a828b17129173ba26134af81eb"
+    },
+    {
+      "path": "docs/providers/MOCK.md",
+      "sha256": "092615f8e4cc731546c46dd43169f3f42b445e4dbc43d301086e43b92a3c6681"
+    },
+    {
+      "path": "docs/providers/OLLAMA.md",
+      "sha256": "35322f40ddb9b77516043da3dbc5b280add6c045283f3208c44206d0b2171af6"
+    },
+    {
+      "path": "docs/providers/OPENAI.md",
+      "sha256": "c4a5d324ae10e363a49d603d5bf849dad8ead18a7aae5131ecfff8078355bbc4"
+    },
+    {
+      "path": "docs/providers/OPENROUTER.md",
+      "sha256": "32d47247c2d28be8a25f8bb5942e741552650c1fbc735fab68ae93e591efde6d"
+    },
+    {
+      "path": "docs/providers/README.md",
+      "sha256": "77ad966d778cf7442e2055a90733e1e06bae7dae82237930dff88e2ba43f9fd3"
+    },
+    {
+      "path": "docs/providers/SAMBANOVA.md",
+      "sha256": "2fa074bdb0b6941d42a04b86a3aff1d4b0510b72663969dc25d5d4d6d2810b45"
+    },
+    {
+      "path": "docs/providers/TOGETHER.md",
+      "sha256": "f0abf9c6563a6cd80c75149b3869f53d913cd89865619b840c0537348a65da6c"
+    },
+    {
+      "path": "docs/providers/XIAOMI.md",
+      "sha256": "f31defc1abbe85806a82cb739a59224c46e5177ee4944c1fb7e3b5ab7cd1caa2"
+    }
+  ]
+}

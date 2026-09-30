@@ -185,8 +185,8 @@ transport.start()
 ```
 
 Repository example:
-- [mcp_http_server.py](/c:/Users/prajw/Downloads/MTP/examples/mcp_http_server.py)
-- [mcp_http_resume_client.py](/c:/Users/prajw/Downloads/MTP/examples/mcp_http_resume_client.py)
+- [mcp_http_server.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/examples/mcp_http_server.py)
+- [mcp_http_resume_client.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/examples/mcp_http_resume_client.py)
 
 ## MCP-specific WebSocket transport
 
@@ -215,7 +215,7 @@ await ws_server.serve_forever()
 ```
 
 Repository example:
-- [mcp_ws_replay_client.py](/c:/Users/prajw/Downloads/MTP/examples/mcp_ws_replay_client.py)
+- [mcp_ws_replay_client.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/examples/mcp_ws_replay_client.py)
 
 WebSocket replay request example:
 
@@ -289,9 +289,9 @@ Release regression policy:
 
 ## Test coverage
 
-- [test_mcp_adapter.py](/c:/Users/prajw/Downloads/MTP/tests/test_mcp_adapter.py)
-- [test_mcp_transport.py](/c:/Users/prajw/Downloads/MTP/tests/test_mcp_transport.py)
-- [test_mcp_conformance.py](/c:/Users/prajw/Downloads/MTP/tests/test_mcp_conformance.py)
+- [test_mcp_adapter.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/tests/test_mcp_adapter.py)
+- [test_mcp_transport.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/tests/test_mcp_transport.py)
+- [test_mcp_conformance.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/tests/test_mcp_conformance.py)
 - [MCP compatibility matrix](MCP_COMPATIBILITY_MATRIX.md)
 
 ## Remaining MCP work

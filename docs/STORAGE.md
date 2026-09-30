@@ -158,10 +158,10 @@ For structured runs:
 
 ## Examples
 
-- [openai_agent_json_session.py](/c:/Users/prajw/Downloads/MTP/examples/openai_agent_json_session.py)
-- [groq_agent_json_session.py](/c:/Users/prajw/Downloads/MTP/examples/groq_agent_json_session.py)
-- [postgres_agent_session.py](/c:/Users/prajw/Downloads/MTP/examples/postgres_agent_session.py)
-- [mysql_agent_session.py](/c:/Users/prajw/Downloads/MTP/examples/mysql_agent_session.py)
+- [openai_agent_json_session.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/examples/openai_agent_json_session.py)
+- [groq_agent_json_session.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/examples/groq_agent_json_session.py)
+- [postgres_agent_session.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/examples/postgres_agent_session.py)
+- [mysql_agent_session.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/examples/mysql_agent_session.py)
 
 ## Troubleshooting
 

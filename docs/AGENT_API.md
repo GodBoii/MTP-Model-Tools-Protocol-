@@ -2,9 +2,11 @@
 
 This document is the canonical reference for `Agent` and `MTPAgent`.
 
+Website: <https://mtp-model-tools-protocol.vercel.app/docs/agent-api>
+
 ## Constructor
 
-Source: [agent.py](/c:/Users/prajw/Downloads/MTP/src/mtp/agent.py)
+Source: [agent.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/agent.py)
 
 ```python
 Agent(
@@ -118,7 +120,7 @@ Pipeline order:
 
 ### RunOutput
 
-Source: [agent.py](/c:/Users/prajw/Downloads/MTP/src/mtp/agent.py)
+Source: [agent.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/agent.py)
 
 Fields:
 
@@ -178,7 +180,7 @@ This enables post-initialization tool updates without rebuilding the agent.
 
 ## Tool control-flow exceptions
 
-Source: [exceptions.py](/c:/Users/prajw/Downloads/MTP/src/mtp/exceptions.py)
+Source: [exceptions.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/exceptions.py)
 
 - `RetryAgentRun("feedback")`: injects feedback and asks the model to replan.
 - `StopAgentRun("reason")`: pauses/stops the current run and returns with `paused=True`.
@@ -194,7 +196,7 @@ If not implemented, agent async APIs use thread fallback for sync provider metho
 
 ## MTPAgent wrapper
 
-Source: [simple_agent.py](/c:/Users/prajw/Downloads/MTP/src/mtp/simple_agent.py)
+Source: [simple_agent.py](https://github.com/GodBoii/Model-Tool-protocol-/blob/72ffb74440f1620fdd71dd097198380fe12433fc/src/mtp/simple_agent.py)
 
 `MTPAgent` mirrors the same features:
 
