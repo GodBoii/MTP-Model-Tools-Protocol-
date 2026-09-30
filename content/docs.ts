@@ -8,22 +8,16 @@ export type DocChapter = {
 const palettes: [string, string, string][] = [
   ["#101010", "#ff3928", "#ebebeb"],
   ["#151515", "#d9f851", "#ebebeb"],
-  ["#101010", "#32d9ff", "#ebebeb"]
+  ["#101010", "#32d9ff", "#ebebeb"],
+  ["#171717", "#ff3928", "#d8d8d8"],
+  ["#111111", "#f7f7f7", "#ff3928"]
 ];
 const rawDocChapters = [
   ["quickstart", "Quickstart", "Start", "Guide", "docs/website/QUICKSTART.md"],
   ["agent-api", "Agent API Reference", "SDK reference", "Class", "docs/AGENT_API.md"],
   ["architecture", "MTP Python Architecture", "Architecture", "Runtime", "docs/ARCHITECTURE.md"],
-  ["tui-operating-guide", "Terminal UI operating guide", "Start", "Terminal", "docs/TUI_OPERATING_GUIDE.md"],
-  ["codebase-memory", "Codebase memory", "Core runtime", "Guide", "docs/website/CODEBASE_MEMORY.md"],
-  ["agent-os", "Agent OS", "Start", "Browser", "docs/website/AGENT_OS.md"],
-  ["release-notes", "What changed in 0.1.37", "Release", "Changelog", "docs/website/RELEASE_NOTES.md"],
-  ["tui-ux-audit", "TUI UX audit", "Release", "Quality", "docs/TUI_UX_AUDIT.md"],
-  ["tui-ux-verification", "TUI verification", "Release", "Quality", "docs/TUI_UX_VERIFICATION.md"],
   ["cli", "CLI", "Start", "Terminal", "docs/CLI.md"],
   ["creating-tools", "Creating Custom Tools and Toolkits", "Core runtime", "Tools", "docs/CREATING_TOOLS.md"],
-  ["tool-policy", "Tool policy and approvals", "Core runtime", "Policy", "docs/website/TOOL_POLICY.md"],
-  ["sdk-recipes", "SDK recipes", "SDK reference", "Examples", "docs/website/SDK_RECIPES.md"],
   ["events", "Event Stream Contract", "Observability", "Events", "docs/EVENTS.md"],
   ["groq-integration", "Groq Integration Guide", "Providers", "Cloud", "docs/GROQ_INTEGRATION.md"],
   ["implementation-notes", "Implementation Notes", "Architecture", "Internals", "docs/IMPLEMENTATION_NOTES.md"],
@@ -60,7 +54,15 @@ const rawDocChapters = [
   ["provider-openrouter", "OpenRouter Provider", "Providers", "Cloud", "docs/providers/OPENROUTER.md"],
   ["provider-sambanova", "SambaNova Provider", "Providers", "Cloud", "docs/providers/SAMBANOVA.md"],
   ["provider-together", "Together AI Provider", "Providers", "Cloud", "docs/providers/TOGETHER.md"],
-  ["provider-xiaomi", "Xiaomi MiMo Provider", "Providers", "Cloud", "docs/providers/XIAOMI.md"]
+  ["provider-xiaomi", "Xiaomi MiMo Provider", "Providers", "Cloud", "docs/providers/XIAOMI.md"],
+  ["tui-operating-guide", "Terminal UI operating guide", "Start", "Terminal", "docs/TUI_OPERATING_GUIDE.md"],
+  ["codebase-memory", "Codebase memory", "Core runtime", "Guide", "docs/website/CODEBASE_MEMORY.md"],
+  ["agent-os", "Agent OS", "Start", "Browser", "docs/website/AGENT_OS.md"],
+  ["release-notes", "What changed in 0.1.37", "Release", "Changelog", "docs/website/RELEASE_NOTES.md"],
+  ["tui-ux-audit", "TUI UX audit", "Release", "Quality", "docs/TUI_UX_AUDIT.md"],
+  ["tui-ux-verification", "TUI verification", "Release", "Quality", "docs/TUI_UX_VERIFICATION.md"],
+  ["tool-policy", "Tool policy and approvals", "Core runtime", "Policy", "docs/website/TOOL_POLICY.md"],
+  ["sdk-recipes", "SDK recipes", "SDK reference", "Examples", "docs/website/SDK_RECIPES.md"]
 ] as const;
 
 const summaries: Record<string, string> = {
@@ -99,10 +101,10 @@ const summaries: Record<string, string> = {
   "tui-ux-audit": "Read reproduced terminal layout, setup, keyboard, and command-flow issues.",
   "tui-ux-verification": "Inspect the terminal audit's checks, captures, and remaining limits."
 };
-const selected = new Set(["quickstart", "tui-operating-guide", "cli", "creating-tools", "agent-api", "providers", "codebase-memory", "events"]);
+const selected = new Set(["quickstart", "agent-api", "architecture", "cli", "creating-tools", "events", "groq-integration", "implementation-notes"]);
 export const docChapters: DocChapter[] = rawDocChapters.map(([slug, title, group, track, sourcePath], index) => ({
   slug, title, group, track, sourcePath,
-  order: String(index + 1).padStart(2, "0"),
+  order: String(index + 1).padStart(3, "0"),
   summary: summaries[slug] ?? `Install and configure the ${title.replace(/ Provider$/, "")} adapter, then run the Python example and check its capabilities.`,
   palette: palettes[index % palettes.length],
   selected: selected.has(slug)

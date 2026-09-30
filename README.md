@@ -1,6 +1,6 @@
 # MTPX documentation website
 
-Documentation and recorded demos for MTPX 0.1.37, the Model Tool Protocol Python SDK and CLI. The site has 50 documentation chapters, four videos, nine product screenshots, searchable guides, copyable code, and source links.
+Documentation and recorded demos for MTPX 0.1.37, the Model Tool Protocol Python SDK and CLI. The site has 50 documentation chapters, four videos, nine product screenshots, the original animated document rows and hover previews.
 
 ## Run locally
 
@@ -18,14 +18,14 @@ npm run build
 npm run start
 ```
 
-The application uses Next.js 16, React 18, TypeScript, react-markdown, remark-gfm, and rehype-slug. GSAP and Lenis retain the existing page transitions. Reduced-motion users get direct navigation and static presentation.
+The application uses Next.js 16, React 18, and TypeScript. The original GSAP and Lenis animations, hover previews, popup styling, navigation, and document layouts are preserved. Only documentation content and recorded media have been added or updated.
 
 ## Routes and content
 
 | Route | Contents |
 | --- | --- |
-| `/` | CLI demos, terminal screenshots, runtime flow, and selected guides |
-| `/docs` | Search and section filters for all 50 chapters |
+| `/` | Original hero and selected document rows, followed by recorded examples |
+| `/docs` | Original document rows and animated hover previews for 50 chapters |
 | `/docs/quickstart` | Install, offline example, scaffolding, and a first cloud agent |
 | `/docs/tui-operating-guide` | Provider setup, models, keyboard controls, queues, and sessions |
 | `/docs/codebase-memory` | Local indexing and search |
@@ -35,7 +35,7 @@ The application uses Next.js 16, React 18, TypeScript, react-markdown, remark-gf
 | `/docs/release-notes` | Changes in releases 0.1.35 through 0.1.37 |
 | `/docs/provider-*` | Provider constructor and capability references |
 
-The complete registry is `content/docs.ts`. Unknown chapter slugs return 404. The old generic introductions and synthetic provider examples have been removed.
+The complete registry is `content/docs.ts`. Unknown chapter slugs return 404. The original chapter layout uses current source paragraphs, section headings, and actual code examples for its introduction and primer.
 
 ## Update the manuals
 
@@ -92,19 +92,19 @@ By default, browser verification uses `http://localhost:3000`. Pass the URL of y
 npm run verify:browser -- http://localhost:3100
 ```
 
-The browser script checks every documentation route and table-of-contents anchor, search, filters, empty results, reset, clipboard copying, modal focus and Escape behavior, playback and captions, image loading, desktop/tablet/mobile overflow, and normal-motion route navigation. It writes screenshots and a report to ignored `output/verification/`.
+The browser script checks all documentation routes, original chapter layouts, pointer-following hover previews, keyboard-focus previews, animated route navigation, the original video popup and its close controls, playback and captions, image loading, and desktop/tablet/mobile overflow. It writes screenshots and a report to ignored `output/verification/`.
 
 ## Project layout
 
 ```text
 app/                      Next.js routes, metadata, and global CSS
-components/               Search, media, code copying, navigation, and motion
+components/               Original previews, recorded media, navigation, and motion
 content/docs.ts           Chapter registry and topic summaries
 content/docs-source.json  Source version, revision, and hashes
 content/demos.ts          Demo descriptions and output summaries
 docs/                     Synced and derived manuals
 docs/website/             Website-specific guides
-lib/docsMarkdown.ts       File loading, anchors, and source-link resolution
+lib/docsMarkdown.ts       Original Markdown parsing, file loading, and source-link resolution
 public/media/             Videos, captions, screenshots, and provenance
 public/downloads/         Runnable offline agent
 scripts/                  Sync, reference generation, capture, render, verification

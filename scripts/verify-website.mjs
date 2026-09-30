@@ -13,50 +13,52 @@ const browser = await chromium.launch({ channel: "chrome", headless: true });
 const failures = [];
 const report = { base, routes: [], interactions: [], viewports: [], videos: [] };
 try {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: "reduce", permissions: ["clipboard-read", "clipboard-write"] });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   const page = await context.newPage();
   page.on("pageerror", (error) => failures.push(error.message));
   page.on("response", (response) => { if (response.status() >= 400) failures.push(`${response.status()} ${response.url()}`); });
   await page.goto(`${base}/docs`);
-  const routes = await page.locator(".chapter-result").evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+  await page.locator(".loader").waitFor({ state: "detached" });
+  const routes = await page.locator(".docs-row").evaluateAll((links) => links.map((link) => link.getAttribute("href")));
+  assert.equal(routes.length, 50);
   for (const route of routes) {
     const response = await context.request.get(`${base}${route}`);
     assert.equal(response.status(), 200, route);
     const html = await response.text();
-    const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
-    for (const match of html.matchAll(/href="#([^"]+)"/g)) assert(ids.has(match[1]), `Missing anchor ${route}#${match[1]}`);
     assert(!html.includes("/c:/Users"), `Local-machine link in ${route}`);
+    assert(html.includes("doc-primer") && html.includes("doc-manual"), `Original chapter layout missing in ${route}`);
     report.routes.push(route);
   }
   assert.equal((await context.request.get(`${base}/docs/no-such-chapter`)).status(), 404);
-  report.interactions.push("Unknown documentation slug returns 404");
-  await page.getByLabel("Search the manual").fill("codebase");
-  assert(await page.locator(".chapter-result").count() > 0);
-  await page.getByLabel("Search the manual").fill("no-such-chapter-xyz");
-  await page.getByText("No chapters match this search.").waitFor();
-  await page.getByRole("button", { name: "Clear filters" }).click();
-  assert.equal(await page.locator(".chapter-result").count(), routes.length);
-  await page.getByLabel("Section", { exact: true }).selectOption("Providers");
-  assert(await page.locator(".chapter-result").count() < routes.length);
-  report.interactions.push("Search, empty result, reset, and section filter");
-  await page.goto(`${base}/docs/quickstart`);
-  await page.getByRole("button", { name: "Copy code" }).first().click();
-  await page.getByRole("button", { name: "Copied", exact: true }).waitFor();
-  assert((await page.evaluate(() => navigator.clipboard.readText())).includes("pip install mtpx"));
-  await page.getByRole("navigation", { name: "On this page" }).getByRole("link", { name: "Watch tool execution" }).click();
-  assert.equal(new URL(page.url()).hash, "#watch-tool-execution");
-  report.interactions.push("Copy real code and navigate a table-of-contents anchor");
+  report.interactions.push("50 updated chapters retain the original primer and manual layout; unknown slugs return 404");
+  const first = page.locator(".docs-row").first();
+  await first.hover();
+  await page.locator(".floating-preview.is-active .visual__canvas").waitFor();
+  const transform = await page.locator(".floating-preview").evaluate((preview) => preview.style.transform);
+  assert(transform.includes("translate3d"));
+  await page.mouse.move(1300, 60);
+  assert.equal(await page.locator(".floating-preview.is-active").count(), 0);
+  await first.focus();
+  await page.locator(".floating-preview.is-active").waitFor();
+  report.interactions.push("Original pointer-following hover preview and keyboard-focus preview");
+  await first.click();
+  await page.waitForURL("**/docs/quickstart");
+  await page.waitForFunction(() => getComputedStyle(document.querySelector("main")).visibility === "visible");
+  report.interactions.push("Original animated route transition and chapter layout");
   await page.goto(base);
-  const trigger = page.getByRole("button", { name: "Watch the terminal walkthrough" });
+  await page.locator(".loader").waitFor({ state: "detached" });
+  const trigger = page.getByRole("button", { name: "play showreel / runtime study" });
   await trigger.click();
-  await page.getByRole("dialog").waitFor();
-  await page.locator("dialog video").evaluate(async (video) => { video.muted = true; await video.play(); });
-  await page.waitForFunction(() => document.querySelector("dialog video").currentTime > .15);
+  await page.locator(".video-modal").waitFor();
+  await page.locator(".video-modal video").evaluate(async (video) => { video.muted = true; await video.play(); });
+  await page.waitForFunction(() => document.querySelector(".video-modal video").currentTime > .15);
   await page.keyboard.press("Escape");
-  assert.equal(await page.locator("dialog").evaluate((dialog) => dialog.open), false);
+  await page.locator(".video-modal").waitFor({ state: "detached" });
   assert(await trigger.evaluate((button) => button === document.activeElement));
-  assert(await page.locator("dialog video").evaluate((video) => video.paused));
-  report.interactions.push("Modal video playback, Escape close, pause, and focus return");
+  await trigger.click();
+  await page.getByRole("button", { name: "Close video" }).click();
+  await page.locator(".video-modal").waitFor({ state: "detached" });
+  report.interactions.push("Original showreel popup, real video playback, Escape and close button");
   for (const name of ["cli", "agent", "memory", "tui"]) {
     const meta = await page.evaluate(async (name) => {
       const video = document.createElement("video");
@@ -72,7 +74,7 @@ try {
     await page.setViewportSize({ width, height });
     for (const [label, route] of [["home", "/"], ["docs", "/docs"], ["guide", "/docs/tui-operating-guide"]]) {
       await page.goto(`${base}${route}`);
-      // Scroll through the page to load the same lazy media a reader sees.
+      await page.locator(".loader").waitFor({ state: "detached" });
       await page.locator("img").evaluateAll((images) => images.forEach((image) => { image.loading = "eager"; }));
       await page.waitForFunction(() => [...document.images].every((image) => image.complete && image.naturalWidth > 0));
       const dimensions = await page.evaluate(() => ({ viewport: innerWidth, width: document.documentElement.scrollWidth }));
@@ -81,18 +83,9 @@ try {
       report.viewports.push({ label, name, ...dimensions });
     }
   }
-  // Normal motion remains usable, including intercepted route navigation.
-  const motion = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
-  motion.on("pageerror", (error) => failures.push(error.message));
-  await motion.goto(base);
-  await motion.locator(".loader").waitFor({ state: "detached" });
-  await motion.getByRole("link", { name: "Start building" }).click();
-  await motion.waitForURL("**/docs/quickstart");
-  await motion.waitForFunction(() => getComputedStyle(document.querySelector("main")).visibility === "visible");
-  report.interactions.push("Normal-motion homepage to quickstart route transition");
   assert.deepEqual(failures, []);
   await writeFile(resolve(output, "report.json"), JSON.stringify(report, null, 2) + "\n");
-  console.log(JSON.stringify({ routes: report.routes.length, interactions: report.interactions.length, viewports: report.viewports.length, videos: report.videos, errors: failures }, null, 2));
+  console.log(JSON.stringify({ routes: report.routes.length, interactions: report.interactions, viewports: report.viewports.length, videos: report.videos, errors: failures }, null, 2));
 } finally {
   await browser.close();
 }

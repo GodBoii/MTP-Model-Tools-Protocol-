@@ -16,6 +16,7 @@ export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) {
+      setLoading(false);
       return;
     }
 
@@ -39,7 +40,6 @@ export function Providers({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       const target = event.target as HTMLElement | null;
       const anchor = target?.closest<HTMLAnchorElement>("a[href]");
       if (!anchor || event.defaultPrevented) return;
@@ -79,7 +79,6 @@ export function Providers({ children }: { children: ReactNode }) {
   }, [router]);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = gsap.context(() => {
       window.scrollTo({ top: 0, left: 0 });
 
@@ -158,11 +157,6 @@ export function Providers({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      // The media-query result arrives outside render; a microtask ends the initial loader.
-      queueMicrotask(() => { if (!cancelled) setLoading(false); });
-      return () => { cancelled = true; };
-    }
     const count = { value: 0 };
     const tween = gsap.to(count, {
       value: 92, duration: 0.9, ease: "power3.out",
@@ -217,7 +211,6 @@ export function Providers({ children }: { children: ReactNode }) {
 
 function GrainCanvas() {
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const canvas = document.querySelector<HTMLCanvasElement>("#grain");
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;

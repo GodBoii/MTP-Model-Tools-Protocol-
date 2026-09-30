@@ -8,28 +8,27 @@ The review covered CLI parsing and scaffolds, public agent methods, provider fac
 
 Provider references derive parameters and capability declarations from the source AST. They do not instantiate provider clients or infer capabilities from marketing copy. Source manuals carry their original file hashes. This is a documentation and website update; the MTP runtime checkout is unchanged.
 
-## What changed
+## Documentation and media changes
 
-- Replace the placeholder showreel with a native video dialog.
 - Add CLI help, agent scaffolding and execution, codebase indexing, and TUI walkthrough recordings.
 - Add nine screenshots from captured CLI output and actual Textual states.
 - Add a runnable offline agent example that returns 42 through a real tool call.
 - Sync 45 source manuals, replace 15 provider references, and add six focused website guides.
-- Replace repeated generic chapter copy with topic summaries and a searchable 50-chapter index.
-- Render nested Markdown lists, tables, autolinks, and fenced code with maintained Markdown libraries.
-- Add copy controls, section anchors, breadcrumbs, source links, and 404 behavior.
-- Keep reduced-motion presentation static and preserve native dialog keyboard focus.
-- Update the lint command for Next.js 16 and refresh dependencies within their declared ranges.
+- Use current source paragraphs, section headings, and code for the existing chapter introductions.
+- Put recordings and screenshots inside the existing manual-section layout.
+- Put a real video inside the existing showreel popup.
 
-## Checks performed
+## Original interface preserved
 
-The production build, TypeScript check, and ESLint pass. The package audit reports zero vulnerabilities.
+The homepage hero, document rows, hover overlays, pointer-following previews, Three.js visuals, navigation, page transitions, popup styling, chapter hero, primer, and manual layout match the original interface. Global styles match the original stylesheet apart from four media-fitting rules. Updated chapters retain the original order and color palettes; new chapters follow the existing ones.
 
-The browser checks cover 50 routes, all generated section anchors, search and section filters, empty results and reset, copying real code to the clipboard, modal video playback, Escape close, paused playback after dismissal, restored trigger focus, and normal-motion route navigation. All four WebM recordings decode at 1440 by 960 pixels and have caption files.
+The documentation search, filters, code-copy controls, new navigation links, new homepage layout, and redesigned chapter layout have been removed at the user's request.
 
-Nine page and viewport combinations cover the homepage, docs index, and terminal guide at desktop 1440px, tablet 768px, and mobile 390px. The checks report no horizontal overflow, missing images, page errors, or failed HTTP responses. Screenshots and the structured report are in ignored `output/verification/`.
+## Checks
 
-The MTP source tests for CLI offline flows, docs consistency, simple agents, TUI UX flows, and Agent OS streaming pass with 57 tests. The standalone offline example was executed successfully and its tool result was 42.
+Browser verification checks the original hover and focus previews, animated navigation, the original video popup and close controls, all 50 documentation routes, media loading, all four video files, and desktop, tablet, and mobile layouts. Its screenshots and structured report are in ignored `output/verification/`.
+
+The production build, TypeScript check, and ESLint are run before publishing. The MTP source tests for CLI offline flows, docs consistency, simple agents, TUI UX flows, and Agent OS streaming previously passed with 57 tests. The standalone offline example returned 42.
 
 ## Limits
 

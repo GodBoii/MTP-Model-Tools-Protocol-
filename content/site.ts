@@ -1,7 +1,5 @@
 export const navItems = [
-  { label: "docs", href: "/docs" },
-  { label: "demos", href: "/#demos" },
-  { label: "github", href: "https://github.com/GodBoii/Model-Tool-protocol-" }
+  { label: "docs", href: "/docs" }
 ];
 
 export const installCommand = "pip install mtpx";
