@@ -1,0 +1,32 @@
+{
+  "cli": [
+    {
+      "command": "mtp --help",
+      "output": "usage: mtp [-h] {new,run,doctor,providers,tui,agent-os,codebase} ...\n\nMTP command line tools: scaffold, run, diagnostics, provider introspection.\n\npositional arguments:\n  {new,run,doctor,providers,tui,agent-os,codebase}\n    new                 Create a new MTP project from a template.\n    run                 Run a scaffolded project entry script.\n    doctor              Validate environment and provider setup.\n    providers           Provider metadata commands.\n    tui                 Launch interactive TUI for MTP + Codex bridge.\n    agent-os            Launch Streamlit Agent OS UI.\n    codebase            Codebase memory and indexing commands.\n\noptions:\n  -h, --help            show this help message and exit"
+    }
+  ],
+  "agent": [
+    {
+      "command": "mtp new first-agent --template minimal",
+      "output": "Created project: ./demo-workspace\\first-agent\nFiles:\n- .env.example\n- app.py\n- pyproject.toml\n- README.md\n\nNext steps:\n1. cd ./demo-workspace\\first-agent\n2. python -m venv .venv\n3. .venv\\Scripts\\activate\n4. pip install -e .[groq]\n5. copy .env.example .env and set API keys\n6. mtp run"
+    },
+    {
+      "command": "Generated app.py",
+      "output": "from mtp import Agent\nfrom mtp.providers import Groq\nfrom mtp.toolkits import CalculatorToolkit\n\n\ndef main() -> None:\n    Agent.load_dotenv_if_available()\n\n    tools = Agent.ToolRegistry()\n    tools.register_toolkit_loader(\"calculator\", CalculatorToolkit())\n\n    provider = Groq(model=\"openai/gpt-oss-120b\")\n    agent = Agent.MTPAgent(\n        provider=provider,\n        tools=tools,\n        instructions=\"Use tools when useful and keep answers concise.\",\n    )\n\n    result = agent.run(\"What is (25 * 4) + 10?\")\n    print(result)\n\n\nif __name__ == \"__main__\":\n    main()\n\n"
+    },
+    {
+      "command": "mtp run --path ./first-agent --entry offline_agent.py",
+      "output": "Running offline_agent.py in ./demo-workspace\\first-agent\nOffline provider. Real MTP runtime and Python tool. No network requests.\nrun_started  \nplan_received  \ntool_started demo.add \ntool_finished demo.add 42\nrun_completed  Tool result: 42"
+    }
+  ],
+  "memory": [
+    {
+      "command": "mtp codebase memory --path ./first-agent --on",
+      "output": "Scanning codebase...  25% files=1 changed=1 skipped=0\nScanning codebase...  50% files=2 changed=2 skipped=0\nScanning codebase...  75% files=3 changed=3 skipped=0\nScanning codebase...  99% files=4 changed=4 skipped=0\nScanning codebase... 100% files=4 changed=4 skipped=0\nCodebase memory scan complete: 100% files=4 changed=4 deleted=0 chunks=10\nSaved memory database: ./demo-workspace\\first-agent\\.mtp\\memory\\codebase.sqlite"
+    },
+    {
+      "command": "mtp codebase status --path ./first-agent",
+      "output": "key                     value                                                                                              \n----------------------  ---------------------------------------------------------------------------------------------------\nroot                    ./demo-workspace\\first-agent                            \nenabled                 True                                                                                               \ndb                      ./demo-workspace\\first-agent\\.mtp\\memory\\codebase.sqlite\nfiles                   4                                                                                                  \nchunks                  10                                                                                                 \nconversation_summaries  0                                                                                                  \nlast_scan_at            2026-09-30T20:45:46+00:00"
+    }
+  ]
+}

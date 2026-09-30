@@ -1,0 +1,24 @@
+{
+  "version": "0.1.37",
+  "revision": "72ffb74440f1620fdd71dd097198380fe12433fc",
+  "method": "CLI subprocess output and Textual run_test screen exports, recorded as browser replays",
+  "cloudInference": false,
+  "scripts": [
+    "scripts/capture-demos.py",
+    "scripts/render-demos.mjs"
+  ],
+  "videos": [
+    "cli.webm",
+    "agent.webm",
+    "memory.webm",
+    "tui.webm"
+  ],
+  "screens": [
+    "tui-home",
+    "tui-help",
+    "tui-providers",
+    "tui-setup",
+    "tui-chats",
+    "tui-status"
+  ]
+}

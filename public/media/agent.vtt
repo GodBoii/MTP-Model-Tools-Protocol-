@@ -1,0 +1,10 @@
+WEBVTT
+
+00:00.000 --> 00:04.000
+mtp new first-agent scaffolds the starter project.
+
+00:04.000 --> 00:09.000
+The generated app registers a calculator and configures Groq.
+
+00:09.000 --> 00:25.000
+Run offline_agent.py. A deterministic provider calls demo.add through the real MTP runtime. The result is 42.

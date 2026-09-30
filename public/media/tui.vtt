@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00.000 --> 00:03.000
+Start the terminal UI with mtp tui.
+
+00:03.000 --> 00:06.000
+Read slash commands with /help.
+
+00:06.000 --> 00:09.000
+Choose a provider with /backend.
+
+00:09.000 --> 00:12.000
+Enter credentials in the masked /apikey groq setup form.
+
+00:12.000 --> 00:15.000
+Ctrl+N creates another chat with its own draft.
+
+00:15.000 --> 00:20.000
+Inspect the active session and workspace with /status.
