@@ -9,7 +9,7 @@ export function Header() {
   return (
     <header className="nav">
       <Link className="link-line brand" href="/">mtpx</Link>
-      <div className="nav__descriptor">multi tool protocol</div>
+      <div className="nav__descriptor">model tool protocol</div>
       <nav className="nav__routes" aria-label="Primary navigation">
         {navItems.map((item) => (
           <Link className={`link-line ${pathname === item.href || pathname.startsWith(`${item.href}/`) ? "is-active" : ""}`} href={item.href} key={item.href}>

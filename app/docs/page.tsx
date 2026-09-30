@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { DocsRows } from "@/components/DocsRows";
+import Link from "next/link";
+import { DocsExplorer } from "@/components/DocsExplorer";
 import { TextReveal } from "@/components/TextReveal";
-import { docChapters } from "@/content/docs";
+import { docsSource } from "@/content/docs";
 
 export const metadata: Metadata = {
   title: "Docs | MTPX",
@@ -10,15 +11,16 @@ export const metadata: Metadata = {
 
 export default function DocsIndexPage() {
   return (
-    <main className="page-shell">
+    <main className="page-shell" id="main-content">
       <section className="ledger-hero docs-index-hero">
-        <TextReveal text="Documentation index" as="h1" />
+        <span className="release-tag">MTPX {docsSource.version} / Python 3.10+</span>
+        <TextReveal text="The working manual." as="h1" />
         <p>
-          Browse the MTPX manual as a living catalogue. Hover a row for a preview,
-          open the chapter for explanations, use cases, implementation notes, and code.
+          Build an agent, configure the terminal, or inspect the runtime. Search the guides and API references below.
         </p>
       </section>
-      <DocsRows chapters={docChapters} />
+      <div className="docs-start-links"><Link href="/docs/quickstart">Create your first agent ↗</Link><Link href="/docs/tui-operating-guide">Set up the terminal ↗</Link><Link href="/docs/release-notes">Read release notes ↗</Link></div>
+      <DocsExplorer />
     </main>
   );
 }

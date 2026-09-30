@@ -6,15 +6,24 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "docs:sync": "node scripts/sync-docs.mjs",
+    "verify:browser": "node scripts/verify-website.mjs",
+    "demos:capture": "python scripts/capture-demos.py",
+    "demos:render": "node scripts/render-demos.mjs"
   },
   "dependencies": {
     "@studio-freight/lenis": "^1.0.42",
+    "github-slugger": "^2.0.0",
     "gsap": "^3.12.5",
     "lucide-react": "^0.468.0",
     "next": "^16.2.9",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "rehype-slug": "^6.0.0",
+    "remark-gfm": "^4.0.1",
     "three": "^0.167.1"
   },
   "devDependencies": {
@@ -24,6 +33,8 @@
     "@types/three": "^0.184.1",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.2.9",
+    "playwright": "^1.63.0",
+    "sharp": "^0.35.5",
     "typescript": "^5.5.3"
   }
 }

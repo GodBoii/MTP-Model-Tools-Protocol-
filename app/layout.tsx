@@ -6,13 +6,14 @@ import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "MTPX Documentation",
-  description: "Motion-led documentation for MTPX, a multi-tool protocol runtime and SDK for inspectable agent systems."
+  description: "MTPX 0.1.37 documentation, CLI recordings, and Python examples for agents, tools, sessions, providers, and the terminal UI."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
+        <a className="skip-link" href="#main-content">Skip to content</a>
         <Providers>
           <Header />
           {children}
