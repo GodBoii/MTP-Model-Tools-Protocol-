@@ -235,7 +235,7 @@ function InlineTokens({ tokens, chapterSourcePath }: { tokens: InlineToken[]; ch
         if (token.type === "strong") return <strong key={index}>{token.value}</strong>;
         if (token.type === "link") {
           return (
-            <Link href={resolveMarkdownHref(token.href, chapterSourcePath)} key={index}>
+            <Link href={resolveMarkdownHref(token.href, chapterSourcePath)} download={token.href.startsWith("/downloads/") || undefined} key={index}>
               {token.value}
             </Link>
           );
